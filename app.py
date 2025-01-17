@@ -1,5 +1,5 @@
 from flask import Flask
-from database import configurar_banco
+from database import configurar_banco, Usuario
 from flask_login import LoginManager
 import routes
 
@@ -18,7 +18,11 @@ def criar_app():
     # Configura o Login Manager
     login_manager = LoginManager()
     login_manager.init_app(app)
-    login_manager.login_view = 'login'
+    login_manager.login_view = 'routes.login'
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        return Usuario.query.get(int(user_id))
     
     # Registra as rotas
     routes.init_app(app)
@@ -26,6 +30,7 @@ def criar_app():
     return app
 
 
+app = criar_app()
+
 if __name__ == '__main__':
-    app = criar_app()
     app.run(debug=True) 
