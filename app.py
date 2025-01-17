@@ -1,10 +1,8 @@
 from flask import Flask
 from database import configurar_banco, Usuario
 from flask_login import LoginManager
-import routes
 
 def criar_app():
-    """Cria e configura a aplicação Flask"""
     app = Flask(__name__)
     
     # Configurações
@@ -16,18 +14,19 @@ def criar_app():
     # Inicializa o banco de dados
     configurar_banco(app)
     
-    # Registra as rotas primeiro
-    routes.init_app(app)
-    
     # Configura o Login Manager
     login_manager = LoginManager()
     login_manager.init_app(app)
-    login_manager.login_view = 'main.login'  # Usando o nome do blueprint
+    login_manager.login_view = 'login'  # Endpoint simples
     login_manager.login_message = 'Por favor, faça login para acessar esta página.'
     
     @login_manager.user_loader
     def load_user(user_id):
         return Usuario.query.get(int(user_id))
+    
+    # Importa e registra as rotas
+    from routes import main as main_blueprint
+    app.register_blueprint(main_blueprint)
     
     return app
 

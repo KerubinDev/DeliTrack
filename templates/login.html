@@ -1,47 +1,87 @@
-{% extends "base.html" %}
-
-{% block title %}Login - Restaurante App{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
-{% endblock %}
-
-{% block content %}
-<div class="login-container">
-    <div class="login-card">
-        <div class="login-header">
-            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="login-logo">
-            <h1>Bem-vindo</h1>
-            <p>Faça login para continuar</p>
-        </div>
-        
-        <form method="POST" class="login-form">
-            <div class="form-group">
-                <div class="input-icon">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" 
-                           name="email" 
-                           placeholder="Seu e-mail"
-                           required 
-                           autocomplete="email">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - DeliTrack</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        .login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .flash-messages {
+            margin-bottom: 1rem;
+        }
+        .flash-error {
+            color: #f44336;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            background: #ffebee;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Login</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
                 </div>
-            </div>
-            
+            {% endif %}
+        {% endwith %}
+        <form method="POST">
             <div class="form-group">
-                <div class="input-icon">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" 
-                           name="senha" 
-                           placeholder="Sua senha"
-                           required>
-                </div>
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
             </div>
-            
-            <button type="submit" class="btn-login">
-                <span>Entrar</span>
-                <i class="fas fa-arrow-right"></i>
-            </button>
+            <div class="form-group">
+                <label for="senha">Senha:</label>
+                <input type="password" id="senha" name="senha" required>
+            </div>
+            <button type="submit">Entrar</button>
         </form>
     </div>
-</div>
-{% endblock %} 
+</body>
+</html> 
