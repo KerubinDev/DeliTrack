@@ -1,5 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
-from database import configurar_banco, Usuario, Pedido, ItemPedido
+from database import (
+    configurar_banco, Usuario, Pedido, ItemPedido, Produto, db
+)
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from datetime import datetime, timedelta
