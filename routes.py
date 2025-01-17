@@ -3,9 +3,10 @@ from flask_login import login_user, logout_user, login_required, current_user
 from database import db, Usuario, Produto, Pedido, ItemPedido
 from werkzeug.security import check_password_hash
 
-bp = Blueprint('main', __name__)
+# Criando o Blueprint com o nome 'main'
+main = Blueprint('main', __name__)
 
-@bp.route('/login', methods=['GET', 'POST'])
+@main.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         email = request.form.get('email')
@@ -15,19 +16,20 @@ def login():
         
         if usuario and check_password_hash(usuario.senha_hash, senha):
             login_user(usuario)
-            return redirect(url_for('main.dashboard'))
+            next_page = request.args.get('next')
+            return redirect(next_page if next_page else url_for('main.dashboard'))
         
         flash('Email ou senha inválidos', 'error')
     
     return render_template('login.html')
 
-@bp.route('/logout')
+@main.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('main.login'))
 
-@bp.route('/')
+@main.route('/')
 @login_required
 def dashboard():
     if current_user.tipo == 'garcom':
@@ -41,7 +43,7 @@ def dashboard():
     
     return redirect(url_for('main.login'))
 
-@bp.route('/api/produto/<int:produto_id>')
+@main.route('/api/produto/<int:produto_id>')
 @login_required
 def get_produto(produto_id):
     produto = Produto.query.get_or_404(produto_id)
@@ -52,7 +54,7 @@ def get_produto(produto_id):
         'descricao': produto.descricao
     }
 
-@bp.route('/api/pedidos', methods=['POST'])
+@main.route('/api/pedidos', methods=['POST'])
 @login_required
 def criar_pedido():
     if current_user.tipo != 'garcom':
@@ -78,7 +80,7 @@ def criar_pedido():
     db.session.commit()
     return {'success': True, 'pedido_id': pedido.id}
 
-@bp.route('/api/pedidos/atualizacoes')
+@main.route('/api/pedidos/atualizacoes')
 @login_required
 def get_atualizacoes():
     pedidos_aguardando = Pedido.query.filter_by(status='aguardando').all()
@@ -91,7 +93,7 @@ def get_atualizacoes():
         'prontos': [p.to_dict() for p in pedidos_prontos]
     }
 
-@bp.route('/api/pedidos/<int:pedido_id>/iniciar', methods=['POST'])
+@main.route('/api/pedidos/<int:pedido_id>/iniciar', methods=['POST'])
 @login_required
 def iniciar_pedido(pedido_id):
     if current_user.tipo != 'cozinheiro':
@@ -103,7 +105,7 @@ def iniciar_pedido(pedido_id):
     
     return {'success': True}
 
-@bp.route('/api/pedidos/<int:pedido_id>/pronto', methods=['POST'])
+@main.route('/api/pedidos/<int:pedido_id>/pronto', methods=['POST'])
 @login_required
 def finalizar_pedido(pedido_id):
     if current_user.tipo != 'cozinheiro':
@@ -115,7 +117,7 @@ def finalizar_pedido(pedido_id):
     
     return {'success': True}
 
-@bp.route('/api/entregas/status')
+@main.route('/api/entregas/status')
 @login_required
 def get_status_entregas():
     if current_user.tipo != 'entregador':
@@ -126,7 +128,7 @@ def get_status_entregas():
         'andamento': []  # Implementar lógica de entregas em andamento
     }
 
-@bp.route('/api/dashboard/metricas')
+@main.route('/api/dashboard/metricas')
 @login_required
 def get_metricas_dashboard():
     if current_user.tipo != 'gerente':
@@ -144,4 +146,4 @@ def get_metricas_dashboard():
     }
 
 def init_app(app):
-    app.register_blueprint(bp)
+    app.register_blueprint(main)
