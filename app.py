@@ -14,19 +14,19 @@ def criar_app():
     # Inicializa o banco de dados
     configurar_banco(app)
     
+    # Importa e registra as rotas
+    from routes import main as main_blueprint
+    app.register_blueprint(main_blueprint)
+    
     # Configura o Login Manager
     login_manager = LoginManager()
     login_manager.init_app(app)
-    login_manager.login_view = 'login'  # Endpoint simples
+    login_manager.login_view = 'main.login'  # Corrigido para usar o endpoint do blueprint
     login_manager.login_message = 'Por favor, faça login para acessar esta página.'
     
     @login_manager.user_loader
     def load_user(user_id):
         return Usuario.query.get(int(user_id))
-    
-    # Importa e registra as rotas
-    from routes import main as main_blueprint
-    app.register_blueprint(main_blueprint)
     
     return app
 
