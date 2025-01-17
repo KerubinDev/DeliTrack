@@ -1,7 +1,9 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
-from database import configurar_banco, Usuario
+from database import configurar_banco, Usuario, Pedido, ItemPedido
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
+from datetime import datetime, timedelta
+from sqlalchemy import func
 
 def criar_app():
     app = Flask(__name__)
@@ -59,7 +61,70 @@ def criar_app():
         elif current_user.tipo == 'entregador':
             return render_template('entregador/painel.html')
         elif current_user.tipo == 'gerente':
-            return render_template('gerente/dashboard.html')
+            # Cálculo das métricas
+            hoje = datetime.now().date()
+            inicio_mes = hoje.replace(day=1)
+            
+            # Vendas totais do mês
+            vendas_mes = db.session.query(
+                func.sum(ItemPedido.quantidade * Produto.preco)
+            ).join(
+                Pedido, ItemPedido.pedido_id == Pedido.id
+            ).join(
+                Produto, ItemPedido.produto_id == Produto.id
+            ).filter(
+                Pedido.data_criacao >= inicio_mes
+            ).scalar() or 0
+            
+            # Pedidos do dia
+            pedidos_hoje = Pedido.query.filter(
+                func.date(Pedido.data_criacao) == hoje
+            ).count()
+            
+            # Ticket médio
+            ticket_medio = vendas_mes / (
+                Pedido.query.filter(
+                    Pedido.data_criacao >= inicio_mes
+                ).count() or 1
+            )
+            
+            # Produtos mais vendidos
+            produtos_populares = db.session.query(
+                Produto.nome,
+                func.sum(ItemPedido.quantidade).label('total')
+            ).join(
+                ItemPedido, Produto.id == ItemPedido.produto_id
+            ).group_by(
+                Produto.id
+            ).order_by(
+                func.sum(ItemPedido.quantidade).desc()
+            ).limit(5).all()
+            
+            # Garçons mais produtivos
+            garcons_produtivos = db.session.query(
+                Usuario.nome,
+                func.count(Pedido.id).label('total_pedidos')
+            ).join(
+                Pedido, Usuario.id == Pedido.garcom_id
+            ).filter(
+                Usuario.tipo == 'garcom',
+                Pedido.data_criacao >= inicio_mes
+            ).group_by(
+                Usuario.id
+            ).order_by(
+                func.count(Pedido.id).desc()
+            ).limit(5).all()
+            
+            metricas = {
+                'vendas_totais': vendas_mes,
+                'pedidos_hoje': pedidos_hoje,
+                'ticket_medio': ticket_medio,
+                'produtos_populares': produtos_populares,
+                'garcons_produtivos': garcons_produtivos,
+                'data_atual': hoje.strftime('%d/%m/%Y')
+            }
+            
+            return render_template('gerente/dashboard.html', metricas=metricas)
         
         return redirect(url_for('login'))
     
