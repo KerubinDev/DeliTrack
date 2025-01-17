@@ -1,0 +1,326 @@
+:root {
+    --card-gradient: linear-gradient(145deg, #ffffff, #f5f5f5);
+    --success-gradient: linear-gradient(145deg, #4caf50, #45a049);
+    --warning-gradient: linear-gradient(145deg, #ff9800, #f57c00);
+    --info-gradient: linear-gradient(145deg, #2196f3, #1976d2);
+    --danger-gradient: linear-gradient(145deg, #f44336, #d32f2f);
+}
+
+.dashboard-container {
+    padding: 1.5rem;
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+.dashboard-header {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.periodo-selector {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn-periodo {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--accent-color);
+    background: transparent;
+    color: var(--accent-color);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-periodo.active,
+.btn-periodo:hover {
+    background: var(--accent-color);
+    color: var(--white);
+}
+
+.custom-period {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.custom-period input[type="date"] {
+    padding: 0.5rem;
+    border: 1px solid var(--accent-color);
+    border-radius: 20px;
+    outline: none;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-export,
+.btn-config {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-export {
+    background: var(--primary-color);
+    color: var(--white);
+}
+
+.btn-config {
+    background: var(--background-color);
+    color: var(--primary-color);
+}
+
+.metricas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.metrica-card {
+    background: var(--card-gradient);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    transition: var(--transition);
+}
+
+.metrica-card:hover {
+    transform: translateY(-5px);
+}
+
+.metrica-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--white);
+}
+
+.metrica-card.vendas .metrica-icon {
+    background: var(--success-gradient);
+}
+
+.metrica-card.pedidos .metrica-icon {
+    background: var(--info-gradient);
+}
+
+.metrica-card.ticket .metrica-icon {
+    background: var(--warning-gradient);
+}
+
+.metrica-card.tempo .metrica-icon {
+    background: var(--danger-gradient);
+}
+
+.metrica-info {
+    flex: 1;
+}
+
+.metrica-info h3 {
+    color: var(--text-color);
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.metrica-valor {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+}
+
+.valor {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.variacao {
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.variacao.positiva {
+    color: var(--success-color);
+}
+
+.variacao.negativa {
+    color: var(--error-color);
+}
+
+.graficos-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.grafico-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--background-color);
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon:hover {
+    background: var(--primary-color);
+    color: var(--white);
+}
+
+.tabela-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--background-color);
+}
+
+.funcionario-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.funcionario-info img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.avaliacao {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.estrelas {
+    color: #ffd700;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--white);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    margin: 2rem auto;
+}
+
+.config-section {
+    margin-bottom: 2rem;
+}
+
+.config-opcoes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.switch {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+}
+
+.slider {
+    position: relative;
+    width: 50px;
+    height: 24px;
+    background: var(--background-color);
+    border-radius: 12px;
+    transition: var(--transition);
+}
+
+.switch input:checked + .slider {
+    background: var(--primary-color);
+}
+
+/* Responsividade */
+@media (max-width: 1200px) {
+    .graficos-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .periodo-selector {
+        flex-wrap: wrap;
+    }
+    
+    .metricas-grid {
+        grid-template-columns: 1fr;
+    }
+} 
