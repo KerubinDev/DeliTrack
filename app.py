@@ -96,19 +96,45 @@ def criar_app():
                 variacao_vendas = ((vendas_mes - vendas_mes_anterior) / 
                                  vendas_mes_anterior) * 100
             else:
-                variacao_vendas = 100  # Se não houve vendas no mês anterior
+                variacao_vendas = 100
             
             # Pedidos do dia
             pedidos_hoje = Pedido.query.filter(
                 func.date(Pedido.data_criacao) == hoje
             ).count()
             
-            # Ticket médio
-            ticket_medio = vendas_mes / (
-                Pedido.query.filter(
-                    Pedido.data_criacao >= inicio_mes
-                ).count() or 1
-            )
+            # Pedidos do dia anterior
+            ontem = hoje - timedelta(days=1)
+            pedidos_ontem = Pedido.query.filter(
+                func.date(Pedido.data_criacao) == ontem
+            ).count()
+            
+            # Variação de pedidos
+            if pedidos_ontem > 0:
+                variacao_pedidos = ((pedidos_hoje - pedidos_ontem) / 
+                                  pedidos_ontem) * 100
+            else:
+                variacao_pedidos = 100
+            
+            # Ticket médio atual
+            num_pedidos_mes = Pedido.query.filter(
+                Pedido.data_criacao >= inicio_mes
+            ).count() or 1
+            ticket_medio = vendas_mes / num_pedidos_mes
+            
+            # Ticket médio do mês anterior
+            num_pedidos_mes_anterior = Pedido.query.filter(
+                Pedido.data_criacao >= inicio_mes_anterior,
+                Pedido.data_criacao < inicio_mes
+            ).count() or 1
+            ticket_medio_anterior = vendas_mes_anterior / num_pedidos_mes_anterior
+            
+            # Variação do ticket médio
+            if ticket_medio_anterior > 0:
+                variacao_ticket = ((ticket_medio - ticket_medio_anterior) / 
+                                 ticket_medio_anterior) * 100
+            else:
+                variacao_ticket = 100
             
             # Produtos mais vendidos
             produtos_populares = db.session.query(
@@ -139,12 +165,17 @@ def criar_app():
             
             metricas = {
                 'vendas_totais': vendas_mes,
+                'vendas_mes_anterior': vendas_mes_anterior,
+                'variacao_vendas': variacao_vendas,
                 'pedidos_hoje': pedidos_hoje,
+                'pedidos_ontem': pedidos_ontem,
+                'variacao_pedidos': variacao_pedidos,
                 'ticket_medio': ticket_medio,
+                'ticket_medio_anterior': ticket_medio_anterior,
+                'variacao_ticket': variacao_ticket,
                 'produtos_populares': produtos_populares,
                 'garcons_produtivos': garcons_produtivos,
-                'data_atual': hoje.strftime('%d/%m/%Y'),
-                'variacao_vendas': variacao_vendas
+                'data_atual': hoje.strftime('%d/%m/%Y')
             }
             
             return render_template('gerente/dashboard.html', metricas=metricas)
