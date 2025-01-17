@@ -66,6 +66,7 @@ def criar_app():
             # Cálculo das métricas
             hoje = datetime.now().date()
             inicio_mes = hoje.replace(day=1)
+            inicio_mes_anterior = (inicio_mes - timedelta(days=1)).replace(day=1)
             
             # Vendas totais do mês
             vendas_mes = db.session.query(
@@ -77,6 +78,25 @@ def criar_app():
             ).filter(
                 Pedido.data_criacao >= inicio_mes
             ).scalar() or 0
+            
+            # Vendas do mês anterior
+            vendas_mes_anterior = db.session.query(
+                func.sum(ItemPedido.quantidade * Produto.preco)
+            ).join(
+                Pedido, ItemPedido.pedido_id == Pedido.id
+            ).join(
+                Produto, ItemPedido.produto_id == Produto.id
+            ).filter(
+                Pedido.data_criacao >= inicio_mes_anterior,
+                Pedido.data_criacao < inicio_mes
+            ).scalar() or 0
+            
+            # Cálculo da variação de vendas
+            if vendas_mes_anterior > 0:
+                variacao_vendas = ((vendas_mes - vendas_mes_anterior) / 
+                                 vendas_mes_anterior) * 100
+            else:
+                variacao_vendas = 100  # Se não houve vendas no mês anterior
             
             # Pedidos do dia
             pedidos_hoje = Pedido.query.filter(
@@ -123,7 +143,8 @@ def criar_app():
                 'ticket_medio': ticket_medio,
                 'produtos_populares': produtos_populares,
                 'garcons_produtivos': garcons_produtivos,
-                'data_atual': hoje.strftime('%d/%m/%Y')
+                'data_atual': hoje.strftime('%d/%m/%Y'),
+                'variacao_vendas': variacao_vendas
             }
             
             return render_template('gerente/dashboard.html', metricas=metricas)
