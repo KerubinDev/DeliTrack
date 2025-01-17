@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Restaurante App{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="login-logo">
+            <h1>Bem-vindo</h1>
+            <p>Faça login para continuar</p>
+        </div>
+        
+        <form method="POST" class="login-form">
+            <div class="form-group">
+                <div class="input-icon">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" 
+                           name="email" 
+                           placeholder="Seu e-mail"
+                           required 
+                           autocomplete="email">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="input-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" 
+                           name="senha" 
+                           placeholder="Sua senha"
+                           required>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-login">
+                <span>Entrar</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %} 

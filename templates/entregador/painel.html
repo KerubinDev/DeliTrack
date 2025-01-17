@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Painel do Entregador{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/entregador.css') }}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
+{% endblock %}
+
+{% block content %}
+<div class="entregador-container">
+    <header class="entregador-header">
+        <div class="header-info">
+            <h1>Entregas</h1>
+            <div class="status-info">
+                <div class="status-badge">
+                    <i class="fas fa-motorcycle"></i>
+                    <span>{{ entregas_em_andamento|length }} em andamento</span>
+                </div>
+                <div class="status-badge">
+                    <i class="fas fa-check-circle"></i>
+                    <span>{{ entregas_concluidas }} hoje</span>
+                </div>
+            </div>
+        </div>
+        <div class="entregador-status">
+            <div class="status-toggle">
+                <input type="checkbox" id="statusToggle" 
+                       {% if entregador.disponivel %}checked{% endif %}>
+                <label for="statusToggle">Disponível para Entregas</label>
+            </div>
+        </div>
+    </header>
+
+    <div class="entregas-grid">
+        <!-- Pedidos Prontos para Retirada -->
+        <div class="entregas-column">
+            <h2>Prontos para Retirada</h2>
+            <div class="entregas-list" id="pedidosProntos">
+                {% for pedido in pedidos_prontos %}
+                <div class="entrega-card" data-id="{{ pedido.id }}">
+                    <div class="entrega-header">
+                        <span class="pedido-id">#{{ pedido.id }}</span>
+                        <span class="tempo-espera" 
+                              data-tempo="{{ pedido.tempo_espera }}">
+                            {{ pedido.tempo_espera_formatado }}
+                        </span>
+                    </div>
+                    
+                    <div class="entrega-info">
+                        <div class="endereco">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <div class="endereco-detalhes">
+                                <span class="rua">{{ pedido.endereco.rua }}, 
+                                    {{ pedido.endereco.numero }}</span>
+                                <span class="complemento">
+                                    {{ pedido.endereco.complemento }}</span>
+                                <span class="bairro">{{ pedido.endereco.bairro }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="cliente-info">
+                            <i class="fas fa-user"></i>
+                            <div class="cliente-detalhes">
+                                <span class="nome">{{ pedido.cliente.nome }}</span>
+                                <span class="telefone">{{ pedido.cliente.telefone }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="entrega-actions">
+                        <button class="btn-primary" 
+                                onclick="aceitarEntrega({{ pedido.id }})">
+                            Aceitar Entrega
+                        </button>
+                        <button class="btn-map" 
+                                onclick="mostrarMapa({{ pedido.endereco.lat }}, 
+                                                   {{ pedido.endereco.lng }})">
+                            <i class="fas fa-map"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Entregas em Andamento -->
+        <div class="entregas-column">
+            <h2>Em Andamento</h2>
+            <div class="entregas-list" id="entregasAndamento">
+                {% for entrega in entregas_andamento %}
+                <div class="entrega-card active" data-id="{{ entrega.id }}">
+                    <div class="progress-steps">
+                        <div class="step completed">
+                            <i class="fas fa-store"></i>
+                            <span>Retirada</span>
+                        </div>
+                        <div class="step {% if entrega.status == 'em_rota' %}active{% endif %}">
+                            <i class="fas fa-motorcycle"></i>
+                            <span>Em Rota</span>
+                        </div>
+                        <div class="step">
+                            <i class="fas fa-home"></i>
+                            <span>Entregue</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Conteúdo similar ao card anterior -->
+                    
+                    <div class="entrega-actions">
+                        {% if entrega.status == 'aceito' %}
+                        <button class="btn-primary" 
+                                onclick="iniciarRota({{ entrega.id }})">
+                            Iniciar Rota
+                        </button>
+                        {% elif entrega.status == 'em_rota' %}
+                        <button class="btn-success" 
+                                onclick="confirmarEntrega({{ entrega.id }})">
+                            Confirmar Entrega
+                        </button>
+                        {% endif %}
+                        
+                        <button class="btn-navigation" 
+                                onclick="navegarAte({{ entrega.endereco.lat }}, 
+                                                  {{ entrega.endereco.lng }})">
+                            <i class="fas fa-directions"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal do Mapa -->
+<div class="modal" id="mapaModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Localização da Entrega</h2>
+            <button class="btn-icon" onclick="fecharModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div id="mapa" style="height: 400px;"></div>
+            <div class="rota-info">
+                <div class="distancia">
+                    <i class="fas fa-road"></i>
+                    <span id="distancia">Calculando...</span>
+                </div>
+                <div class="tempo">
+                    <i class="fas fa-clock"></i>
+                    <span id="tempo">Calculando...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="{{ url_for('static', filename='js/entregador.js') }}"></script>
+{% endblock %} 
