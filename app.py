@@ -11,6 +11,7 @@ def criar_app():
     app.config['SECRET_KEY'] = 'sua_chave_secreta_aqui'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///restaurante.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['DEBUG'] = True  # Habilitando o modo debug
     
     # Inicializa o banco de dados
     configurar_banco(app)
@@ -18,7 +19,7 @@ def criar_app():
     # Configura o Login Manager
     login_manager = LoginManager()
     login_manager.init_app(app)
-    login_manager.login_view = 'login'
+    login_manager.login_view = 'main.login'  # Corrigido para usar o blueprint
     
     @login_manager.user_loader
     def load_user(user_id):
@@ -33,4 +34,4 @@ def criar_app():
 app = criar_app()
 
 if __name__ == '__main__':
-    app.run(debug=True) 
+    app.run(debug=True, host='0.0.0.0') 
