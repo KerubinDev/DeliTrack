@@ -8,230 +8,47 @@
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-    <header class="dashboard-header">
-        <div class="header-content">
-            <h1>Dashboard Gerencial</h1>
-            <div class="periodo-selector">
-                <button class="btn-periodo active" data-periodo="hoje">Hoje</button>
-                <button class="btn-periodo" data-periodo="semana">Semana</button>
-                <button class="btn-periodo" data-periodo="mes">Mês</button>
-                <div class="custom-period">
-                    <input type="date" id="dataInicio">
-                    <input type="date" id="dataFim">
-                    <button class="btn-aplicar">Aplicar</button>
-                </div>
-            </div>
-        </div>
-        <div class="header-actions">
-            <button class="btn-export" onclick="exportarRelatorio()">
-                <i class="fas fa-download"></i>
-                Exportar Relatório
-            </button>
-            <button class="btn-config" onclick="abrirConfiguracoes()">
-                <i class="fas fa-cog"></i>
-            </button>
-        </div>
-    </header>
-
-    <div class="metricas-grid">
-        <!-- Cards de Métricas Principais -->
-        <div class="metrica-card vendas">
-            <div class="metrica-icon">
-                <i class="fas fa-shopping-cart"></i>
-            </div>
-            <div class="metrica-info">
-                <h3>Vendas Totais</h3>
-                <div class="metrica-valor">
-                    <span class="valor">R$ {{ "%.2f"|format(metricas.vendas_totais) }}</span>
-                    <span class="variacao positiva">
-                        <i class="fas fa-arrow-up"></i>
-                        {{ "%.1f"|format(metricas.variacao_vendas) }}%
-                    </span>
-                </div>
-            </div>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-2 d-none d-md-block sidebar bg-dark text-light">
+            <!-- ... sidebar content ... -->
         </div>
 
-        <div class="metrica-card pedidos">
-            <div class="metrica-icon">
-                <i class="fas fa-receipt"></i>
-            </div>
-            <div class="metrica-info">
-                <h3>Total de Pedidos</h3>
-                <div class="metrica-valor">
-                    <span class="valor">{{ metricas.total_pedidos }}</span>
-                    <span class="variacao positiva">
-                        <i class="fas fa-arrow-up"></i>
-                        {{ metricas.variacao_pedidos }}%
-                    </span>
+        <!-- Main Content -->
+        <div class="col-md-10 ms-sm-auto px-4">
+            <!-- Cards Principais -->
+            <div class="row g-4 py-5" data-aos="fade-up">
+                <!-- Card Vendas -->
+                <div class="col-md-3">
+                    <div class="card glass-card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Vendas Totais</h5>
+                            <h2 class="mb-0">R$ {{ "%.2f"|format(metricas.vendas_totais) }}</h2>
+                            <small class="text-{{ 'success' if metricas.variacao_vendas >= 0 else 'danger' }}">
+                                {{ "%.1f"|format(metricas.variacao_vendas) }}% vs mês anterior
+                            </small>
+                        </div>
+                    </div>
                 </div>
+                <!-- ... outros cards ... -->
             </div>
-        </div>
 
-        <div class="metrica-card ticket">
-            <div class="metrica-icon">
-                <i class="fas fa-ticket-alt"></i>
-            </div>
-            <div class="metrica-info">
-                <h3>Ticket Médio</h3>
-                <div class="metrica-valor">
-                    <span class="valor">R$ {{ "%.2f"|format(metricas.ticket_medio) }}</span>
-                    <span class="variacao negativa">
-                        <i class="fas fa-arrow-down"></i>
-                        {{ "%.1f"|format(metricas.variacao_ticket) }}%
-                    </span>
+            <!-- Gráficos -->
+            <div class="row g-4 py-3" data-aos="fade-up" data-aos-delay="100">
+                <div class="col-md-8">
+                    <div class="card glass-card">
+                        <div class="card-body">
+                            <canvas id="vendasChart"></canvas>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="metrica-card tempo">
-            <div class="metrica-icon">
-                <i class="fas fa-clock"></i>
-            </div>
-            <div class="metrica-info">
-                <h3>Tempo Médio de Entrega</h3>
-                <div class="metrica-valor">
-                    <span class="valor">{{ metricas.tempo_medio_entrega }} min</span>
-                    <span class="variacao positiva">
-                        <i class="fas fa-arrow-up"></i>
-                        {{ metricas.variacao_tempo }}%
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="graficos-grid">
-        <!-- Gráfico de Vendas -->
-        <div class="grafico-card vendas-tempo">
-            <div class="card-header">
-                <h3>Vendas por Período</h3>
-                <div class="card-actions">
-                    <button class="btn-icon" onclick="alternarVisualizacao('vendas')">
-                        <i class="fas fa-chart-line"></i>
-                    </button>
-                    <button class="btn-icon" onclick="exportarGrafico('vendas')">
-                        <i class="fas fa-download"></i>
-                    </button>
-                </div>
-            </div>
-            <canvas id="graficoVendas"></canvas>
-        </div>
-
-        <!-- Gráfico de Produtos -->
-        <div class="grafico-card produtos-populares">
-            <div class="card-header">
-                <h3>Produtos Mais Vendidos</h3>
-                <div class="card-actions">
-                    <button class="btn-icon" onclick="alternarVisualizacao('produtos')">
-                        <i class="fas fa-chart-pie"></i>
-                    </button>
-                </div>
-            </div>
-            <canvas id="graficoProdutos"></canvas>
-        </div>
-
-        <!-- Mapa de Calor de Entregas -->
-        <div class="grafico-card mapa-entregas">
-            <div class="card-header">
-                <h3>Mapa de Entregas</h3>
-                <div class="card-actions">
-                    <button class="btn-icon" onclick="alternarFiltroMapa()">
-                        <i class="fas fa-filter"></i>
-                    </button>
-                </div>
-            </div>
-            <div id="mapaCalor"></div>
-        </div>
-
-        <!-- Tabela de Desempenho -->
-        <div class="grafico-card desempenho-equipe">
-            <div class="card-header">
-                <h3>Desempenho da Equipe</h3>
-                <div class="card-actions">
-                    <button class="btn-icon" onclick="ordenarTabela()">
-                        <i class="fas fa-sort"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="tabela-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Funcionário</th>
-                            <th>Pedidos</th>
-                            <th>Avaliação</th>
-                            <th>Tempo Médio</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for funcionario in desempenho_equipe %}
-                        <tr>
-                            <td>
-                                <div class="funcionario-info">
-                                    <img src="{{ funcionario.foto }}" alt="{{ funcionario.nome }}">
-                                    <span>{{ funcionario.nome }}</span>
-                                </div>
-                            </td>
-                            <td>{{ funcionario.total_pedidos }}</td>
-                            <td>
-                                <div class="avaliacao">
-                                    <span class="estrelas">
-                                        {% for _ in range(funcionario.avaliacao|int) %}
-                                        <i class="fas fa-star"></i>
-                                        {% endfor %}
-                                    </span>
-                                    <span class="valor">{{ "%.1f"|format(funcionario.avaliacao) }}</span>
-                                </div>
-                            </td>
-                            <td>{{ funcionario.tempo_medio }} min</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal de Configurações -->
-<div class="modal" id="configModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Configurações do Dashboard</h2>
-            <button class="btn-icon" onclick="fecharModal()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="config-section">
-                <h3>Visualização</h3>
-                <div class="config-opcoes">
-                    <label class="switch">
-                        <input type="checkbox" id="darkMode">
-                        <span class="slider"></span>
-                        Modo Escuro
-                    </label>
-                    <label class="switch">
-                        <input type="checkbox" id="atualizacaoAutomatica">
-                        <span class="slider"></span>
-                        Atualização Automática
-                    </label>
-                </div>
-            </div>
-            <div class="config-section">
-                <h3>Notificações</h3>
-                <div class="config-opcoes">
-                    <label class="switch">
-                        <input type="checkbox" id="notifVendas">
-                        <span class="slider"></span>
-                        Alertas de Vendas
-                    </label>
-                    <label class="switch">
-                        <input type="checkbox" id="notifDesempenho">
-                        <span class="slider"></span>
-                        Alertas de Desempenho
-                    </label>
+                <div class="col-md-4">
+                    <div class="card glass-card">
+                        <div class="card-body">
+                            <canvas id="pedidosChart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
