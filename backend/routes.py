@@ -9,10 +9,10 @@ from .models import (
 )
 
 # Blueprint para organizar as rotas
-bp = Blueprint('main', __name__)
+main = Blueprint('main', __name__)
 
 
-@bp.route('/')
+@main.route('/')
 @login_required
 def index():
     """Rota principal - redireciona para a interface adequada"""
@@ -27,7 +27,7 @@ def index():
     return redirect(url_for('main.dashboard'))
 
 
-@bp.route('/garcom')
+@main.route('/garcom')
 @login_required
 def garcom():
     """Interface do garçom"""
@@ -36,7 +36,7 @@ def garcom():
     return render_template('garcom.html')
 
 
-@bp.route('/cozinha')
+@main.route('/cozinha')
 @login_required
 def cozinha():
     """Interface da cozinha"""
@@ -45,7 +45,7 @@ def cozinha():
     return render_template('cozinha.html')
 
 
-@bp.route('/entregador')
+@main.route('/entregador')
 @login_required
 def entregador():
     """Interface do entregador"""
@@ -54,7 +54,7 @@ def entregador():
     return render_template('entregador.html')
 
 
-@bp.route('/dashboard')
+@main.route('/dashboard')
 @login_required
 def dashboard():
     """Dashboard gerencial"""
@@ -79,10 +79,10 @@ def dashboard():
 
 # APIs para atualização em tempo real
 
-@bp.route('/api/pedido/novo', methods=['POST'])
+@main.route('/api/pedido/novo', methods=['POST'])
 @login_required
 def criar_pedido():
-    """API para criar novo pedido."""
+    """API para criar novo pedido"""
     if current_user.tipo != 'garcom':
         return jsonify({'erro': 'Não autorizado'}), 403
     
@@ -90,43 +90,33 @@ def criar_pedido():
     
     try:
         novo_pedido = Pedido(
-            cliente_id=dados['cliente_id'],
-            status='aguardando',
+            numero_mesa=dados['numero_mesa'],
+            status='novo',
             observacoes=dados.get('observacoes', ''),
-            data_criacao=datetime.now()
+            criador_id=current_user.id
         )
         db.session.add(novo_pedido)
         db.session.flush()
         
-        valor_total = 0
         for item in dados['itens']:
-            item_menu = ItemMenu.query.get(item['item_id'])
-            if not item_menu:
-                raise ValueError(f"Item {item['item_id']} não encontrado")
-                
-            valor_item = item_menu.preco * item['quantidade']
-            valor_total += valor_item
-            
             item_pedido = ItemPedido(
                 pedido_id=novo_pedido.id,
-                item_id=item['item_id'],
+                produto_id=item['produto_id'],
                 quantidade=item['quantidade'],
-                valor_unitario=item_menu.preco,
-                valor_total=valor_item,
-                observacao=item.get('observacao', '')
+                valor_unitario=item['valor_unitario'],
+                observacoes=item.get('observacoes', '')
             )
             db.session.add(item_pedido)
         
-        novo_pedido.valor_total = valor_total
         db.session.commit()
-        return jsonify({'mensagem': 'Pedido criado com sucesso'})
-    
+        return jsonify({'mensagem': 'Pedido criado com sucesso', 'id': novo_pedido.id})
+        
     except Exception as e:
         db.session.rollback()
         return jsonify({'erro': str(e)}), 400
 
 
-@bp.route('/api/pedido/<int:pedido_id>/status', methods=['PUT'])
+@main.route('/api/pedido/<int:pedido_id>/status', methods=['PUT'])
 @login_required
 def atualizar_status_pedido(pedido_id):
     """API para atualizar status do pedido."""
@@ -159,7 +149,7 @@ def atualizar_status_pedido(pedido_id):
         return jsonify({'erro': str(e)}), 400
 
 
-@bp.route('/api/entrega/nova', methods=['POST'])
+@main.route('/api/entrega/nova', methods=['POST'])
 @login_required
 def criar_entrega():
     """API para criar nova entrega."""
@@ -189,7 +179,7 @@ def criar_entrega():
         return jsonify({'erro': str(e)}), 400
 
 
-@bp.route('/api/entrega/<int:entrega_id>/status', methods=['PUT'])
+@main.route('/api/entrega/<int:entrega_id>/status', methods=['PUT'])
 @login_required
 def atualizar_status_entrega(entrega_id):
     """API para atualizar status da entrega."""
