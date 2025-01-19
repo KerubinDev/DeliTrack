@@ -26,6 +26,13 @@ class Config:
     LOG_TO_STDOUT = os.environ.get('LOG_TO_STDOUT')
     LOG_LEVEL = os.environ.get('LOG_LEVEL') or 'INFO'
 
+    @staticmethod
+    def init_app(app):
+        """Inicializa a aplicação com configurações específicas."""
+        # Criar pasta de uploads se não existir
+        if not os.path.exists(Config.UPLOAD_FOLDER):
+            os.makedirs(Config.UPLOAD_FOLDER)
+
 
 class DevelopmentConfig(Config):
     """Configurações para ambiente de desenvolvimento."""
