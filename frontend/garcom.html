@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Pedidos - Garçom</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .pedido-card {
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            padding: 1rem;
+            border-radius: 4px;
+        }
+        .status-aguardando {
+            color: #856404;
+            background-color: #fff3cd;
+        }
+        .status-em-preparo {
+            color: #004085;
+            background-color: #cce5ff;
+        }
+        .status-pronto {
+            color: #155724;
+            background-color: #d4edda;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>Gerenciamento de Pedidos</h2>
+        
+        <!-- Formulário de Novo Pedido -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Novo Pedido</h4>
+            </div>
+            <div class="card-body">
+                <form id="formNovoPedido">
+                    <!-- Seleção de Cliente -->
+                    <div class="form-group">
+                        <label for="clienteSelect">Cliente</label>
+                        <select class="form-control" id="clienteSelect" required>
+                            <option value="">Selecione um cliente</option>
+                            {% for cliente in clientes %}
+                            <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="btn btn-sm btn-link" 
+                                data-toggle="modal" data-target="#novoClienteModal">
+                            Novo Cliente
+                        </button>
+                    </div>
+
+                    <!-- Lista de Itens -->
+                    <div class="form-group">
+                        <label>Itens do Pedido</label>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Preço</th>
+                                        <th>Quantidade</th>
+                                        <th>Observação</th>
+                                        <th>Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itensPedido">
+                                    {% for item in itens_menu %}
+                                    <tr>
+                                        <td>{{ item.nome }}</td>
+                                        <td>R$ {{ "%.2f"|format(item.preco) }}</td>
+                                        <td>
+                                            <input type="number" class="form-control form-control-sm" 
+                                                   min="0" value="0">
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm">
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-primary"
+                                                    onclick="adicionarItem({{ item.id }})">
+                                                Adicionar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Observações Gerais -->
+                    <div class="form-group">
+                        <label for="observacoes">Observações Gerais</label>
+                        <textarea class="form-control" id="observacoes" rows="2"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-success">Finalizar Pedido</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Lista de Pedidos Ativos -->
+        <div class="card">
+            <div class="card-header">
+                <h4>Pedidos Ativos</h4>
+            </div>
+            <div class="card-body">
+                <div id="pedidosAtivos">
+                    {% for pedido in pedidos_ativos %}
+                    <div class="pedido-card status-{{ pedido.status }}">
+                        <h5>Pedido #{{ pedido.id }}</h5>
+                        <p>Cliente: {{ pedido.cliente.nome }}</p>
+                        <p>Status: {{ pedido.status }}</p>
+                        <p>Horário: {{ pedido.data_criacao.strftime('%H:%M') }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Novo Cliente -->
+    <div class="modal fade" id="novoClienteModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Novo Cliente</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="formNovoCliente">
+                        <div class="form-group">
+                            <label>Nome</label>
+                            <input type="text" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Telefone</label>
+                            <input type="tel" class="form-control">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Objeto para armazenar itens do pedido atual
+        let itensPedido = [];
+
+        function adicionarItem(itemId) {
+            const row = $(`button[onclick="adicionarItem(${itemId})"]`).closest('tr');
+            const quantidade = parseInt(row.find('input[type="number"]').val());
+            const observacao = row.find('input[type="text"]').val();
+
+            if (quantidade > 0) {
+                itensPedido.push({
+                    item: itemId,
+                    quantidade: quantidade,
+                    observacao: observacao
+                });
+                
+                // Limpar campos
+                row.find('input').val('');
+                atualizarTabelaPedido();
+            }
+        }
+
+        function atualizarTabelaPedido() {
+            // Atualizar visualização dos itens selecionados
+            // Implementar conforme necessário
+        }
+
+        // Enviar pedido
+        $('#formNovoPedido').submit(function(e) {
+            e.preventDefault();
+            
+            if (itensPedido.length === 0) {
+                alert('Adicione pelo menos um item ao pedido');
+                return;
+            }
+
+            const dados = {
+                cliente_id: $('#clienteSelect').val(),
+                itens: itensPedido,
+                observacoes: $('#observacoes').val()
+            };
+
+            $.ajax({
+                url: '/api/pedido/novo',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(dados),
+                success: function(response) {
+                    alert('Pedido criado com sucesso!');
+                    location.reload();
+                },
+                error: function(xhr) {
+                    alert('Erro ao criar pedido: ' + xhr.responseJSON.erro);
+                }
+            });
+        });
+
+        // Atualização em tempo real dos pedidos
+        function atualizarPedidosAtivos() {
+            $.get('/api/pedidos/ativos', function(pedidos) {
+                const container = $('#pedidosAtivos');
+                container.empty();
+                
+                pedidos.forEach(pedido => {
+                    container.append(`
+                        <div class="pedido-card status-${pedido.status}">
+                            <h5>Pedido #${pedido.id}</h5>
+                            <p>Cliente: ${pedido.cliente.nome}</p>
+                            <p>Status: ${pedido.status}</p>
+                            <p>Horário: ${pedido.data_criacao}</p>
+                        </div>
+                    `);
+                });
+            });
+        }
+
+        // Atualizar pedidos a cada 30 segundos
+        setInterval(atualizarPedidosAtivos, 30000);
+    </script>
+</body>
+</html>

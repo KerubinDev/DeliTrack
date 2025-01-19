@@ -1,0 +1,62 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Local development
+.env
+*.sqlite
+*.db
+
+# Uploads
+uploads/
+
+# Coverage reports
+.coverage
+htmlcov/
+
+# Unit test / coverage reports
+.pytest_cache/
+coverage.xml
+*.cover
+
+# Migrations
+migrations/versions/
+
+# Compiled JavaScript
+*.min.js
+*.bundle.js
+
+# Compiled CSS
+*.min.css
+
+# Dependency directories
+node_modules/
+bower_components/
+
+# System Files
+.DS_Store
+Thumbs.db 
