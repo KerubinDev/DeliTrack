@@ -223,15 +223,24 @@ def criar_pedido():
         
         pedido = Pedido(
             tipo=dados['tipo_pedido'],
-            nome_cliente=dados['nome_cliente'],
+            nome_cliente=dados.get('nome_cliente', ''),  # Nome do cliente opcional
             observacoes=dados.get('observacoes', ''),
             criador_id=current_user.id,
             status='novo'  # Garantir que o status inicial seja 'novo'
         )
         
         if dados['tipo_pedido'] == 'local':
+            if not dados.get('numero_mesa'):
+                return jsonify({'erro': 'Número da mesa é obrigatório para pedidos locais'}), 400
             pedido.numero_mesa = dados['numero_mesa']
         else:
+            # Validações para pedido de entrega
+            if not dados.get('nome_cliente'):
+                return jsonify({'erro': 'Nome do cliente é obrigatório para entregas'}), 400
+                
+            if not dados.get('endereco'):
+                return jsonify({'erro': 'Endereço é obrigatório para entregas'}), 400
+                
             endereco = dados['endereco']
             pedido.endereco_entrega = endereco['logradouro']
             pedido.complemento_entrega = endereco.get('complemento', '')
