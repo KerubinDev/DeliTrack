@@ -26,11 +26,14 @@ def login():
         usuario = Usuario.query.filter_by(email=email).first()
         
         if usuario and check_password_hash(usuario.senha_hash, senha):
+            if not usuario.ativo:
+                flash('Sua conta está desativada.', 'danger')
+                return redirect(url_for('auth.login'))
+                
             login_user(usuario)
-            next_page = request.args.get('next')
-            return redirect(next_page or url_for('main.index'))
-        
-        flash('Email ou senha inválidos.', 'error')
+            return redirect(url_for('main.welcome'))  # Redireciona para a tela de boas-vindas
+            
+        flash('Email ou senha incorretos.', 'danger')
     
     return render_template('auth/login.html')
 

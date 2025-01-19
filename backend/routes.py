@@ -198,6 +198,13 @@ def dashboard():
                          produtos=produtos)
 
 
+@main.route('/welcome')
+@login_required
+def welcome():
+    """Rota para a tela de boas-vindas"""
+    return render_template('welcome.html')
+
+
 # APIs para atualização em tempo real
 
 @main.route('/api/pedido/novo', methods=['POST'])
