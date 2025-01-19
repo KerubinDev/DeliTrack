@@ -26,7 +26,13 @@ def create_app(config_name=None):
     if config_name is None:
         config_name = os.environ.get('FLASK_CONFIG', 'default')
     
-    app = Flask(__name__)
+    # Criar aplicação Flask com o diretório de templates correto
+    app = Flask(
+        __name__,
+        template_folder='../templates',
+        static_folder='../static'
+    )
+    
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
     
