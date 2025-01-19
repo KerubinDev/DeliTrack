@@ -22,6 +22,32 @@
             background: rgba(0, 0, 0, 0.8) !important;
             backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1000;
+        }
+
+        .navbar .nav-link {
+            color: rgba(255, 255, 255, 0.8) !important;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+        }
+
+        .navbar .nav-link:hover {
+            color: #4ECDC4 !important;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .navbar .navbar-brand {
+            position: relative;
+            z-index: 1001;
+        }
+
+        .navbar-collapse {
+            position: relative;
+            z-index: 1001;
         }
 
         /* Cards com efeito glassmorphism */
@@ -171,7 +197,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
-            <a class="navbar-brand text-gradient" href="/">
+            <a class="navbar-brand text-gradient" href="{{ url_for('main.index') }}">
                 <i class="fas fa-utensils mr-2"></i>DeliTrack
             </a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
@@ -187,12 +213,12 @@
                         </span>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/auth/alterar-senha">
+                        <a class="nav-link" href="{{ url_for('auth.alterar_senha') }}" onclick="window.location.href='{{ url_for('auth.alterar_senha') }}'">
                             <i class="fas fa-key mr-1"></i>Alterar Senha
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/auth/logout">
+                        <a class="nav-link" href="{{ url_for('auth.logout') }}" onclick="window.location.href='{{ url_for('auth.logout') }}'">
                             <i class="fas fa-sign-out-alt mr-1"></i>Sair
                         </a>
                     </li>
