@@ -2,48 +2,202 @@
 
 {% block title %}DeliTrack - Login{% endblock %}
 
-{% block extra_style %}
-<style>
-    .login-container {
-        max-width: 400px;
-        margin: 2rem auto;
-    }
-    .card {
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .card-header {
-        background-color: #f8f9fa;
-        border-radius: 8px 8px 0 0;
-    }
-    .btn-primary {
-        width: 100%;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="login-container">
-    <div class="card">
-        <div class="card-header">
-            <h4 class="mb-0">Login</h4>
-        </div>
-        <div class="card-body">
-            <form method="post">
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" class="form-control" id="email" name="email" required>
-                </div>
-                <div class="form-group">
-                    <label for="senha">Senha</label>
-                    <input type="password" class="form-control" id="senha" name="senha" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Entrar</button>
-            </form>
-            <div class="text-center mt-3">
-                <a href="{{ url_for('auth.recuperar_senha') }}">Esqueceu sua senha?</a>
+    <!-- Fundo animado com partículas -->
+    <div id="particles-js" class="particles-background"></div>
+
+    <!-- Container do login -->
+    <div class="login-card glass-card">
+        <div class="login-header">
+            <div class="logo-container">
+                <i class="fas fa-utensils text-gradient"></i>
+                <h1 class="text-gradient">DeliTrack</h1>
             </div>
+            <p class="login-subtitle">Sistema de Gerenciamento de Pedidos e Entregas</p>
         </div>
+
+        <form method="POST" class="login-form">
+            <div class="form-group floating-label">
+                <input type="email" class="form-control neo-input" id="email" name="email" required>
+                <label for="email" class="neo-label">Email</label>
+            </div>
+
+            <div class="form-group floating-label">
+                <input type="password" class="form-control neo-input" id="senha" name="senha" required>
+                <label for="senha" class="neo-label">Senha</label>
+            </div>
+
+            <button type="submit" class="btn btn-neon btn-block">
+                <i class="fas fa-sign-in-alt mr-2"></i>Entrar
+            </button>
+
+            <div class="login-links">
+                <a href="{{ url_for('auth.recuperar_senha') }}" class="text-gradient">
+                    <i class="fas fa-key mr-1"></i>Esqueceu a senha?
+                </a>
+            </div>
+        </form>
     </div>
 </div>
+
+<style>
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 2rem;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 2rem;
+    text-align: center;
+    animation: fadeInUp 0.8s ease;
+}
+
+.login-header {
+    margin-bottom: 2rem;
+}
+
+.logo-container {
+    margin-bottom: 1rem;
+}
+
+.logo-container i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.logo-container h1 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 0;
+}
+
+.login-subtitle {
+    color: #a0aec0;
+    font-size: 1rem;
+}
+
+.login-form {
+    text-align: left;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.neo-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(74, 144, 226, 0.3);
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    transition: all 0.3s ease;
+}
+
+.neo-input:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 15px rgba(74, 144, 226, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.neo-label {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a0aec0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.neo-input:focus ~ .neo-label,
+.neo-input:not(:placeholder-shown) ~ .neo-label {
+    top: 0;
+    font-size: 0.8rem;
+    background: rgba(17, 24, 39, 0.8);
+    padding: 0 0.5rem;
+    color: #4a90e2;
+}
+
+.btn-neon {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.login-links {
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.login-links a {
+    color: #a0aec0;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.login-links a:hover {
+    color: #4a90e2;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializa as partículas
+    particlesJS('particles-js', {
+        particles: {
+            number: { value: 80 },
+            color: { value: '#4a90e2' },
+            shape: { type: 'circle' },
+            opacity: {
+                value: 0.5,
+                random: false
+            },
+            size: {
+                value: 3,
+                random: true
+            },
+            line_linked: {
+                enable: true,
+                distance: 150,
+                color: '#4a90e2',
+                opacity: 0.4,
+                width: 1
+            },
+            move: {
+                enable: true,
+                speed: 2,
+                direction: 'none',
+                random: false,
+                straight: false,
+                out_mode: 'out',
+                bounce: false
+            }
+        }
+    });
+});
+</script>
 {% endblock %} 
