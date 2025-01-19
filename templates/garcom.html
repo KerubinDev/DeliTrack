@@ -69,31 +69,38 @@
 
     <div class="container-fluid mt-4">
         <div class="row">
-            <!-- Menu e Novo Pedido -->
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Novo Pedido</h5>
-                        <button class="btn btn-success" data-toggle="modal" data-target="#modalNovoPedido">
-                            <i class="fas fa-plus"></i> Criar Pedido
-                        </button>
+            <!-- Menu -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Menu</h5>
+                        <div class="input-group mt-2">
+                            <input type="text" class="form-control" id="pesquisaMenu" placeholder="Pesquisar no menu...">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body">
-                        <div class="form-group">
-                            <input type="text" class="form-control" id="pesquisaMenu" 
-                                   placeholder="Pesquisar no menu...">
-                        </div>
-                        <div class="list-group" id="listaMenu">
-                            {% for item in itens_menu %}
-                            <div class="list-group-item item-menu" onclick="adicionarItem({{ item.id }})">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="mb-0">{{ item.nome }}</h6>
-                                        <small class="text-muted">{{ item.descricao }}</small>
-                                    </div>
-                                    <div class="text-right">
-                                        <div>R$ {{ "%.2f"|format(item.preco) }}</div>
-                                        <small class="text-muted">{{ item.tempo_preparo }} min</small>
+                        <div class="row" id="menuItems">
+                            {% for produto in produtos %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    {% if produto.imagem %}
+                                    <img src="{{ produto.imagem }}" class="card-img-top" alt="{{ produto.nome }}">
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ produto.nome }}</h6>
+                                        <p class="card-text small">{{ produto.descricao }}</p>
+                                        <p class="card-text">
+                                            <strong>R$ {{ "%.2f"|format(produto.preco) }}</strong>
+                                        </p>
+                                        <button class="btn btn-primary btn-sm btn-block" 
+                                                onclick="adicionarItem({{ produto.id }}, '{{ produto.nome }}', {{ produto.preco }})">
+                                            Adicionar
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -103,151 +110,94 @@
                 </div>
             </div>
 
-            <!-- Pedidos em Andamento -->
-            <div class="col-md-8">
-                <h4>Pedidos em Andamento</h4>
-                <div class="row">
-                    {% for pedido in pedidos_ativos %}
-                    <div class="col-md-6">
-                        <div class="card pedido-card" id="pedido-{{ pedido.id }}">
-                            <div class="pedido-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">Pedido #{{ pedido.id }}</h5>
-                                <span class="badge badge-{{ pedido.status }}">
-                                    {{ pedido.status|title }}
-                                </span>
+            <!-- Pedido Atual -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Novo Pedido</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="formPedido">
+                            <div class="form-group">
+                                <label for="nomeCliente">Nome do Cliente</label>
+                                <input type="text" class="form-control" id="nomeCliente" required>
                             </div>
-                            <div class="pedido-body">
-                                <p><strong>Cliente:</strong> {{ pedido.cliente.nome }}</p>
-                                <div class="mt-2">
-                                    <h6>Itens:</h6>
-                                    <ul class="list-unstyled">
-                                        {% for item in pedido.itens %}
-                                        <li>
-                                            <strong>{{ item.quantidade }}x</strong> {{ item.item.nome }}
-                                            {% if item.observacao %}
-                                            <br><small class="text-muted">Obs: {{ item.observacao }}</small>
-                                            {% endif %}
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
+                            <div class="form-group">
+                                <label for="numeroMesa">Número da Mesa</label>
+                                <input type="number" class="form-control" id="numeroMesa" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Itens do Pedido</label>
+                                <div id="itensPedido" class="list-group mb-3">
+                                    <!-- Itens serão adicionados aqui via JavaScript -->
                                 </div>
-                                {% if pedido.observacoes %}
-                                <div class="alert alert-info">
-                                    <small>{{ pedido.observacoes }}</small>
-                                </div>
-                                {% endif %}
-                                <div class="text-right">
-                                    <strong>Total: R$ {{ "%.2f"|format(pedido.valor_total) }}</strong>
+                                <div id="totalPedido" class="text-right">
+                                    <strong>Total: R$ 0,00</strong>
                                 </div>
                             </div>
-                            <div class="pedido-footer">
-                                <button class="btn btn-danger btn-block" 
-                                        onclick="cancelarPedido({{ pedido.id }})">
-                                    Cancelar Pedido
-                                </button>
+                            <div class="form-group">
+                                <label for="observacoes">Observações</label>
+                                <textarea class="form-control" id="observacoes" rows="2"></textarea>
                             </div>
+                            <button type="submit" class="btn btn-success btn-block">
+                                Confirmar Pedido
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pedidos Ativos -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Pedidos Ativos</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Mesa</th>
+                                        <th>Cliente</th>
+                                        <th>Itens</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pedidosAtivos">
+                                    {% for pedido in pedidos_ativos %}
+                                    <tr>
+                                        <td>{{ pedido.numero_mesa }}</td>
+                                        <td>{{ pedido.nome_cliente }}</td>
+                                        <td>
+                                            <ul class="list-unstyled mb-0">
+                                                {% for item in pedido.itens %}
+                                                <li>{{ item.quantidade }}x {{ item.produto.nome }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </td>
+                                        <td>R$ {{ "%.2f"|format(pedido.valor_total) }}</td>
+                                        <td>
+                                            <span class="badge badge-{{ pedido.status }}">
+                                                {{ pedido.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-danger" 
+                                                    onclick="cancelarPedido({{ pedido.id }})">
+                                                Cancelar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Novo Pedido -->
-    <div class="modal fade" id="modalNovoPedido">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Novo Pedido</h5>
-                    <button type="button" class="close" data-dismiss="modal">
-                        <span>&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="formNovoPedido">
-                        <!-- Dados do Cliente -->
-                        <div class="form-group">
-                            <label>Cliente</label>
-                            <select class="form-control" id="clienteSelect" required>
-                                <option value="">Selecione um cliente...</option>
-                                {% for cliente in clientes %}
-                                <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <!-- Lista de Itens -->
-                        <div class="card mb-3">
-                            <div class="card-header">
-                                <h6 class="mb-0">Itens do Pedido</h6>
-                            </div>
-                            <div class="card-body">
-                                <div id="itensPedido"></div>
-                                <button type="button" class="btn btn-outline-primary btn-sm" 
-                                        data-toggle="modal" data-target="#modalAdicionarItem">
-                                    <i class="fas fa-plus"></i> Adicionar Item
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Observações -->
-                        <div class="form-group">
-                            <label>Observações</label>
-                            <textarea class="form-control" id="observacoesPedido" rows="2"></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" onclick="salvarPedido()">
-                        Criar Pedido
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Adicionar Item -->
-    <div class="modal fade" id="modalAdicionarItem">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Adicionar Item</h5>
-                    <button type="button" class="close" data-dismiss="modal">
-                        <span>&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="formAdicionarItem">
-                        <div class="form-group">
-                            <label>Item</label>
-                            <select class="form-control" id="itemSelect" required>
-                                <option value="">Selecione um item...</option>
-                                {% for item in itens_menu %}
-                                <option value="{{ item.id }}" 
-                                        data-preco="{{ item.preco }}">
-                                    {{ item.nome }} - R$ {{ "%.2f"|format(item.preco) }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Quantidade</label>
-                            <input type="number" class="form-control" id="quantidadeItem" 
-                                   min="1" value="1" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Observação</label>
-                            <textarea class="form-control" id="observacaoItem" rows="2"></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" onclick="adicionarItemAoPedido()">
-                        Adicionar
-                    </button>
                 </div>
             </div>
         </div>
@@ -257,124 +207,157 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://kit.fontawesome.com/your-code.js"></script>
     <script>
-        // Lista de itens do pedido atual
         let itensPedido = [];
-        
-        function atualizarListaItens() {
-            const container = $('#itensPedido');
-            container.empty();
+        let totalPedido = 0;
+
+        function adicionarItem(id, nome, preco) {
+            const quantidade = 1;
+            const item = {
+                id: id,
+                nome: nome,
+                preco: preco,
+                quantidade: quantidade,
+                subtotal: preco * quantidade
+            };
             
-            let total = 0;
-            itensPedido.forEach((item, index) => {
-                const subtotal = item.quantidade * item.preco;
-                total += subtotal;
+            const itemExistente = itensPedido.find(i => i.id === id);
+            if (itemExistente) {
+                itemExistente.quantidade += quantidade;
+                itemExistente.subtotal = itemExistente.preco * itemExistente.quantidade;
+            } else {
+                itensPedido.push(item);
+            }
+            
+            atualizarPedido();
+        }
+
+        function removerItem(id) {
+            itensPedido = itensPedido.filter(item => item.id !== id);
+            atualizarPedido();
+        }
+
+        function atualizarQuantidade(id, delta) {
+            const item = itensPedido.find(i => i.id === id);
+            if (item) {
+                item.quantidade = Math.max(1, item.quantidade + delta);
+                item.subtotal = item.preco * item.quantidade;
+                atualizarPedido();
+            }
+        }
+
+        function atualizarPedido() {
+            const container = document.getElementById('itensPedido');
+            container.innerHTML = '';
+            
+            totalPedido = 0;
+            
+            itensPedido.forEach(item => {
+                totalPedido += item.subtotal;
                 
-                container.append(`
-                    <div class="d-flex justify-content-between align-items-center mb-2">
+                const itemElement = document.createElement('div');
+                itemElement.className = 'list-group-item';
+                itemElement.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <strong>${item.quantidade}x</strong> ${item.nome}
-                            ${item.observacao ? `<br><small class="text-muted">Obs: ${item.observacao}</small>` : ''}
+                            <h6 class="mb-0">${item.nome}</h6>
+                            <small>R$ ${item.preco.toFixed(2)} cada</small>
                         </div>
-                        <div class="text-right">
-                            <div>R$ ${subtotal.toFixed(2)}</div>
-                            <button type="button" class="btn btn-sm btn-outline-danger" 
-                                    onclick="removerItem(${index})">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="atualizarQuantidade(${item.id}, -1)">-</button>
+                            <button class="btn btn-sm btn-outline-secondary" disabled>${item.quantidade}</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="atualizarQuantidade(${item.id}, 1)">+</button>
+                            <button class="btn btn-sm btn-danger ml-2" onclick="removerItem(${item.id})">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
                     </div>
-                `);
+                `;
+                container.appendChild(itemElement);
             });
             
-            if (itensPedido.length > 0) {
-                container.append(`
-                    <div class="text-right mt-3">
-                        <strong>Total: R$ ${total.toFixed(2)}</strong>
-                    </div>
-                `);
-            }
+            document.getElementById('totalPedido').innerHTML = `
+                <strong>Total: R$ ${totalPedido.toFixed(2)}</strong>
+            `;
         }
-        
-        function adicionarItemAoPedido() {
-            const itemSelect = $('#itemSelect');
-            const item = {
-                id: itemSelect.val(),
-                nome: itemSelect.find('option:selected').text().split(' - ')[0],
-                preco: parseFloat(itemSelect.find('option:selected').data('preco')),
-                quantidade: parseInt($('#quantidadeItem').val()),
-                observacao: $('#observacaoItem').val()
-            };
+
+        document.getElementById('formPedido').onsubmit = function(e) {
+            e.preventDefault();
             
-            itensPedido.push(item);
-            atualizarListaItens();
-            
-            $('#modalAdicionarItem').modal('hide');
-            $('#formAdicionarItem')[0].reset();
-        }
-        
-        function removerItem(index) {
-            itensPedido.splice(index, 1);
-            atualizarListaItens();
-        }
-        
-        function salvarPedido() {
             if (itensPedido.length === 0) {
                 alert('Adicione pelo menos um item ao pedido');
                 return;
             }
             
             const pedido = {
-                cliente_id: $('#clienteSelect').val(),
+                nome_cliente: document.getElementById('nomeCliente').value,
+                numero_mesa: document.getElementById('numeroMesa').value,
+                observacoes: document.getElementById('observacoes').value,
                 itens: itensPedido.map(item => ({
-                    item_id: item.id,
+                    produto_id: item.id,
                     quantidade: item.quantidade,
-                    observacao: item.observacao
-                })),
-                observacoes: $('#observacoesPedido').val()
+                    observacoes: ''
+                }))
             };
             
-            $.ajax({
-                url: '/api/pedido/novo',
+            fetch('/api/pedido/novo', {
                 method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(pedido),
-                success: function(response) {
-                    location.reload();
+                headers: {
+                    'Content-Type': 'application/json'
                 },
-                error: function(xhr) {
-                    alert('Erro ao criar pedido: ' + xhr.responseJSON.erro);
+                body: JSON.stringify(pedido)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    throw new Error(data.erro);
+                }
+                alert('Pedido criado com sucesso!');
+                location.reload();
+            })
+            .catch(error => {
+                alert('Erro ao criar pedido: ' + error.message);
+            });
+        };
+
+        // Pesquisa no menu
+        document.getElementById('pesquisaMenu').addEventListener('input', function(e) {
+            const termo = e.target.value.toLowerCase();
+            const items = document.querySelectorAll('#menuItems .col-md-4');
+            
+            items.forEach(item => {
+                const nome = item.querySelector('.card-title').textContent.toLowerCase();
+                const descricao = item.querySelector('.card-text').textContent.toLowerCase();
+                
+                if (nome.includes(termo) || descricao.includes(termo)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
                 }
             });
-        }
-        
-        function cancelarPedido(pedidoId) {
-            if (confirm('Tem certeza que deseja cancelar este pedido?')) {
-                $.ajax({
-                    url: `/api/pedido/${pedidoId}/cancelar`,
-                    method: 'PUT',
-                    success: function(response) {
-                        $(`#pedido-${pedidoId}`).remove();
-                    },
-                    error: function(xhr) {
-                        alert('Erro ao cancelar pedido: ' + xhr.responseJSON.erro);
-                    }
-                });
-            }
-        }
-        
-        // Pesquisa no menu
-        $('#pesquisaMenu').on('input', function() {
-            const termo = $(this).val().toLowerCase();
-            $('.item-menu').each(function() {
-                const texto = $(this).text().toLowerCase();
-                $(this).toggle(texto.includes(termo));
-            });
         });
-        
-        // Atualizar lista de pedidos a cada 30 segundos
-        setInterval(() => {
-            location.reload();
-        }, 30000);
+
+        function cancelarPedido(id) {
+            if (!confirm('Tem certeza que deseja cancelar este pedido?')) return;
+            
+            fetch(`/api/pedido/${id}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: 'cancelado' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    throw new Error(data.erro);
+                }
+                alert('Pedido cancelado com sucesso!');
+                location.reload();
+            })
+            .catch(error => {
+                alert('Erro ao cancelar pedido: ' + error.message);
+            });
+        }
     </script>
 </body>
 </html>
