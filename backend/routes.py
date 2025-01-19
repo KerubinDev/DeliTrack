@@ -91,24 +91,111 @@ def entregador():
 @main.route('/dashboard')
 @login_required
 def dashboard():
-    """Dashboard gerencial"""
-    if current_user.tipo != 'gerente':
-        return redirect(url_for('main.index'))
-        
-    pedidos = Pedido.query.order_by(Pedido.data_criacao.desc()).limit(10).all()
-    usuarios = Usuario.query.all()
+    print("DEBUG - Iniciando rota do dashboard")  # Debug
     
-    stats = {
-        'total_pedidos': Pedido.query.count(),
-        'pedidos_hoje': Pedido.query.filter(Pedido.data_criacao >= datetime.today()).count(),
-        'usuarios_ativos': Usuario.query.filter_by(ativo=True).count(),
-        'valor_total': sum(p.valor_total for p in Pedido.query.all())
+    # Verifica se o usuário é gerente
+    if current_user.tipo != 'gerente':
+        print(f"DEBUG - Acesso negado para usuário tipo {current_user.tipo}")  # Debug
+        flash('Acesso não autorizado.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    print("DEBUG - Usuário autorizado, calculando métricas")  # Debug
+    
+    # Obtém as métricas das últimas 24 horas
+    agora = datetime.now()
+    inicio = agora - timedelta(days=1)
+    
+    # Métricas básicas
+    metricas = {
+        'total_pedidos': 0,  # Inicializa com zero
+        'valor_total': 0,    # Inicializa com zero
+        'pedidos_preparando': 0,
+        'pedidos_novos': 0,
+        'pedidos_prontos': 0,
+        'pedidos_entregues': 0,
+        'pedidos_cancelados': 0,
+        'labels_horas': [],
+        'pedidos_por_hora': []
     }
     
-    return render_template('dashboard.html', 
-                         pedidos=pedidos,
+    try:
+        # Total de pedidos finalizados
+        metricas['total_pedidos'] = Pedido.query.filter(
+            Pedido.data_criacao >= inicio,
+            Pedido.status.in_(['pronto', 'entregue'])
+        ).count()
+        print(f"DEBUG - Total de pedidos: {metricas['total_pedidos']}")  # Debug
+        
+        # Valor total dos pedidos finalizados
+        valor_total = db.session.query(
+            func.sum(Pedido.valor_total)
+        ).filter(
+            Pedido.data_criacao >= inicio,
+            Pedido.status.in_(['pronto', 'entregue'])
+        ).scalar()
+        metricas['valor_total'] = valor_total if valor_total else 0
+        print(f"DEBUG - Valor total: {metricas['valor_total']}")  # Debug
+        
+        # Contagem por status
+        metricas['pedidos_preparando'] = Pedido.query.filter_by(status='preparando').count()
+        metricas['pedidos_novos'] = Pedido.query.filter_by(status='novo').count()
+        metricas['pedidos_prontos'] = Pedido.query.filter_by(status='pronto').count()
+        metricas['pedidos_entregues'] = Pedido.query.filter_by(status='entregue').count()
+        metricas['pedidos_cancelados'] = Pedido.query.filter_by(status='cancelado').count()
+        
+        print(f"DEBUG - Status dos pedidos: novo={metricas['pedidos_novos']}, "
+              f"preparando={metricas['pedidos_preparando']}, "
+              f"pronto={metricas['pedidos_prontos']}, "
+              f"entregue={metricas['pedidos_entregues']}, "
+              f"cancelado={metricas['pedidos_cancelados']}")  # Debug
+        
+        # Gera dados para o gráfico de pedidos por hora
+        for hora in range(24):
+            hora_inicio = agora - timedelta(hours=24-hora)
+            hora_fim = agora - timedelta(hours=23-hora)
+            
+            pedidos = Pedido.query.filter(
+                Pedido.data_criacao >= hora_inicio,
+                Pedido.data_criacao < hora_fim,
+                Pedido.status.in_(['pronto', 'entregue'])
+            ).count()
+            
+            metricas['labels_horas'].append(hora_inicio.strftime('%H:00'))
+            metricas['pedidos_por_hora'].append(pedidos)
+        
+        print(f"DEBUG - Dados do gráfico gerados: {len(metricas['pedidos_por_hora'])} horas")  # Debug
+        
+    except Exception as e:
+        print(f"ERRO - Falha ao calcular métricas: {str(e)}")  # Debug de erro
+        flash('Erro ao carregar métricas.', 'danger')
+        metricas = {
+            'total_pedidos': 0,
+            'valor_total': 0,
+            'pedidos_preparando': 0,
+            'pedidos_novos': 0,
+            'pedidos_prontos': 0,
+            'pedidos_entregues': 0,
+            'pedidos_cancelados': 0,
+            'labels_horas': [],
+            'pedidos_por_hora': []
+        }
+    
+    # Obtém usuários e produtos para as tabelas
+    try:
+        usuarios = Usuario.query.all()
+        produtos = Produto.query.all()
+        print(f"DEBUG - Usuários: {len(usuarios)}, Produtos: {len(produtos)}")  # Debug
+    except Exception as e:
+        print(f"ERRO - Falha ao carregar usuários/produtos: {str(e)}")  # Debug de erro
+        usuarios = []
+        produtos = []
+        flash('Erro ao carregar dados de usuários e produtos.', 'danger')
+    
+    print("DEBUG - Renderizando template do dashboard")  # Debug
+    return render_template('dashboard.html',
+                         metricas=metricas,
                          usuarios=usuarios,
-                         stats=stats)
+                         produtos=produtos)
 
 
 # APIs para atualização em tempo real
