@@ -8,6 +8,8 @@ from werkzeug.security import generate_password_hash
 from .models import (
     Usuario, Pedido, ItemPedido, Entrega, Produto, db
 )
+from werkzeug.utils import secure_filename
+import os
 
 # Blueprint para organizar as rotas
 main = Blueprint('main', __name__)
@@ -101,44 +103,42 @@ def dashboard():
 # APIs para atualização em tempo real
 
 @main.route('/api/pedido/novo', methods=['POST'])
-@login_required
 def criar_pedido():
-    """API para criar novo pedido"""
-    if current_user.tipo != 'garcom':
-        return jsonify({'erro': 'Não autorizado'}), 403
-    
+    """Cria um novo pedido"""
     dados = request.get_json()
     
-    try:
-        novo_pedido = Pedido(
-            numero_mesa=dados['numero_mesa'],
-            status='novo',
-            observacoes=dados.get('observacoes', ''),
-            criador_id=current_user.id
+    pedido = Pedido(
+        tipo=dados['tipo_pedido'],
+        nome_cliente=dados['nome_cliente'],
+        observacoes=dados['observacoes'],
+        criador_id=current_user.id
+    )
+    
+    if dados['tipo_pedido'] == 'local':
+        pedido.numero_mesa = dados['numero_mesa']
+    else:
+        endereco = dados['endereco']
+        pedido.endereco_entrega = endereco['logradouro']
+        pedido.complemento_entrega = endereco['complemento']
+        pedido.bairro_entrega = endereco['bairro']
+        pedido.telefone_entrega = endereco['telefone']
+        pedido.ponto_referencia = endereco['ponto_referencia']
+        if 'coordenadas' in endereco and endereco['coordenadas']:
+            pedido.latitude = endereco['coordenadas']['latitude']
+            pedido.longitude = endereco['coordenadas']['longitude']
+    
+    for item_dados in dados['itens']:
+        item = ItemPedido(
+            produto_id=item_dados['produto_id'],
+            quantidade=item_dados['quantidade'],
+            observacoes=item_dados.get('observacoes', '')
         )
-        db.session.add(novo_pedido)
-        db.session.flush()
-        
-        for item in dados['itens']:
-            produto = Produto.query.get(item['produto_id'])
-            if not produto:
-                raise ValueError(f"Produto {item['produto_id']} não encontrado")
-                
-            item_pedido = ItemPedido(
-                pedido_id=novo_pedido.id,
-                produto_id=produto.id,
-                quantidade=item['quantidade'],
-                valor_unitario=produto.preco,
-                observacoes=item.get('observacoes', '')
-            )
-            db.session.add(item_pedido)
-        
-        db.session.commit()
-        return jsonify({'mensagem': 'Pedido criado com sucesso', 'id': novo_pedido.id})
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'erro': str(e)}), 400
+        pedido.itens.append(item)
+    
+    db.session.add(pedido)
+    db.session.commit()
+    
+    return jsonify({'mensagem': 'Pedido criado com sucesso!'})
 
 
 @main.route('/api/pedido/<int:pedido_id>/status', methods=['PUT'])
@@ -372,3 +372,110 @@ def obter_metricas():
         
     except Exception as e:
         return jsonify({'erro': str(e)}), 400
+
+@main.route('/api/produto/novo', methods=['POST'])
+@login_required
+def criar_produto():
+    """Cria um novo produto"""
+    if current_user.tipo != 'gerente':
+        return jsonify({'erro': 'Acesso não autorizado'}), 403
+        
+    nome = request.form['nome']
+    descricao = request.form['descricao']
+    preco = float(request.form['preco'])
+    categoria = request.form['categoria']
+    ativo = request.form['ativo'].lower() == 'true'
+    
+    produto = Produto(
+        nome=nome,
+        descricao=descricao,
+        preco=preco,
+        categoria=categoria,
+        ativo=ativo
+    )
+    
+    if 'imagem' in request.files:
+        arquivo = request.files['imagem']
+        if arquivo and arquivo.filename:
+            nome_arquivo = secure_filename(arquivo.filename)
+            caminho = os.path.join(current_app.config['UPLOAD_FOLDER'], nome_arquivo)
+            arquivo.save(caminho)
+            produto.imagem = f'/uploads/{nome_arquivo}'
+    
+    db.session.add(produto)
+    db.session.commit()
+    
+    return jsonify({'mensagem': 'Produto criado com sucesso!'})
+
+@main.route('/api/produto/<int:id>', methods=['PUT'])
+@login_required
+def atualizar_produto(id):
+    """Atualiza um produto existente"""
+    if current_user.tipo != 'gerente':
+        return jsonify({'erro': 'Acesso não autorizado'}), 403
+        
+    produto = Produto.query.get_or_404(id)
+    
+    produto.nome = request.form['nome']
+    produto.descricao = request.form['descricao']
+    produto.preco = float(request.form['preco'])
+    produto.categoria = request.form['categoria']
+    produto.ativo = request.form['ativo'].lower() == 'true'
+    
+    if 'imagem' in request.files:
+        arquivo = request.files['imagem']
+        if arquivo and arquivo.filename:
+            # Remove imagem antiga se existir
+            if produto.imagem:
+                caminho_antigo = os.path.join(
+                    current_app.config['UPLOAD_FOLDER'],
+                    os.path.basename(produto.imagem)
+                )
+                if os.path.exists(caminho_antigo):
+                    os.remove(caminho_antigo)
+            
+            nome_arquivo = secure_filename(arquivo.filename)
+            caminho = os.path.join(current_app.config['UPLOAD_FOLDER'], nome_arquivo)
+            arquivo.save(caminho)
+            produto.imagem = f'/uploads/{nome_arquivo}'
+    
+    db.session.commit()
+    
+    return jsonify({'mensagem': 'Produto atualizado com sucesso!'})
+
+@main.route('/api/produto/<int:id>', methods=['DELETE'])
+@login_required
+def deletar_produto(id):
+    """Deleta um produto"""
+    if current_user.tipo != 'gerente':
+        return jsonify({'erro': 'Acesso não autorizado'}), 403
+        
+    produto = Produto.query.get_or_404(id)
+    
+    # Remove imagem se existir
+    if produto.imagem:
+        caminho = os.path.join(
+            current_app.config['UPLOAD_FOLDER'],
+            os.path.basename(produto.imagem)
+        )
+        if os.path.exists(caminho):
+            os.remove(caminho)
+    
+    db.session.delete(produto)
+    db.session.commit()
+    
+    return jsonify({'mensagem': 'Produto deletado com sucesso!'})
+
+@main.route('/api/produto/<int:id>', methods=['GET'])
+def obter_produto(id):
+    """Obtém os detalhes de um produto"""
+    produto = Produto.query.get_or_404(id)
+    return jsonify({
+        'id': produto.id,
+        'nome': produto.nome,
+        'descricao': produto.descricao,
+        'preco': produto.preco,
+        'categoria': produto.categoria,
+        'imagem': produto.imagem,
+        'ativo': produto.ativo
+    })

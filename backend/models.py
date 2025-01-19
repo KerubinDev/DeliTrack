@@ -66,6 +66,8 @@ class Produto(db.Model):
     categoria = db.Column(db.String(50))
     imagem = db.Column(db.String(200))
     ativo = db.Column(db.Boolean, default=True)
+    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relacionamentos
     itens_pedido = db.relationship('ItemPedido', backref='produto', lazy=True)
@@ -76,11 +78,22 @@ class Pedido(db.Model):
     __tablename__ = 'pedidos'
     
     id = db.Column(db.Integer, primary_key=True)
-    numero_mesa = db.Column(db.Integer)
+    tipo = db.Column(db.String(20), default='local')  # local ou entrega
+    numero_mesa = db.Column(db.Integer, nullable=True)
+    nome_cliente = db.Column(db.String(100), nullable=False)
     status = db.Column(db.String(20), default='novo')  # novo, preparando, pronto, entregue, cancelado
     observacoes = db.Column(db.Text)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Campos para entrega
+    endereco_entrega = db.Column(db.String(200), nullable=True)
+    complemento_entrega = db.Column(db.String(100), nullable=True)
+    bairro_entrega = db.Column(db.String(100), nullable=True)
+    telefone_entrega = db.Column(db.String(20), nullable=True)
+    ponto_referencia = db.Column(db.String(200), nullable=True)
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
     
     # Relacionamentos
     criador_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)

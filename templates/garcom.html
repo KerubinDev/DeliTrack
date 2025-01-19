@@ -119,12 +119,43 @@
                     <div class="card-body">
                         <form id="formPedido">
                             <div class="form-group">
+                                <label for="tipoPedido">Tipo de Pedido</label>
+                                <select class="form-control" id="tipoPedido" onchange="alternarTipoPedido()" required>
+                                    <option value="local">Consumo no Local</option>
+                                    <option value="entrega">Entrega</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label for="nomeCliente">Nome do Cliente</label>
                                 <input type="text" class="form-control" id="nomeCliente" required>
                             </div>
-                            <div class="form-group">
-                                <label for="numeroMesa">Número da Mesa</label>
-                                <input type="number" class="form-control" id="numeroMesa" required>
+                            <div id="camposLocal">
+                                <div class="form-group">
+                                    <label for="numeroMesa">Número da Mesa</label>
+                                    <input type="number" class="form-control" id="numeroMesa">
+                                </div>
+                            </div>
+                            <div id="camposEntrega" style="display: none;">
+                                <div class="form-group">
+                                    <label for="endereco">Endereço de Entrega</label>
+                                    <input type="text" class="form-control" id="endereco" placeholder="Rua, número">
+                                </div>
+                                <div class="form-group">
+                                    <label for="complemento">Complemento</label>
+                                    <input type="text" class="form-control" id="complemento" placeholder="Apto, bloco, etc">
+                                </div>
+                                <div class="form-group">
+                                    <label for="bairro">Bairro</label>
+                                    <input type="text" class="form-control" id="bairro">
+                                </div>
+                                <div class="form-group">
+                                    <label for="telefone">Telefone</label>
+                                    <input type="tel" class="form-control" id="telefone">
+                                </div>
+                                <div class="form-group">
+                                    <label for="pontoReferencia">Ponto de Referência</label>
+                                    <input type="text" class="form-control" id="pontoReferencia">
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>Itens do Pedido</label>
@@ -280,6 +311,26 @@
             `;
         }
 
+        function alternarTipoPedido() {
+            const tipo = document.getElementById('tipoPedido').value;
+            const camposLocal = document.getElementById('camposLocal');
+            const camposEntrega = document.getElementById('camposEntrega');
+            const numeroMesa = document.getElementById('numeroMesa');
+            const endereco = document.getElementById('endereco');
+            
+            if (tipo === 'local') {
+                camposLocal.style.display = 'block';
+                camposEntrega.style.display = 'none';
+                numeroMesa.required = true;
+                endereco.required = false;
+            } else {
+                camposLocal.style.display = 'none';
+                camposEntrega.style.display = 'block';
+                numeroMesa.required = false;
+                endereco.required = true;
+            }
+        }
+
         document.getElementById('formPedido').onsubmit = function(e) {
             e.preventDefault();
             
@@ -288,9 +339,10 @@
                 return;
             }
             
+            const tipoPedido = document.getElementById('tipoPedido').value;
             const pedido = {
                 nome_cliente: document.getElementById('nomeCliente').value,
-                numero_mesa: document.getElementById('numeroMesa').value,
+                tipo_pedido: tipoPedido,
                 observacoes: document.getElementById('observacoes').value,
                 itens: itensPedido.map(item => ({
                     produto_id: item.id,
@@ -298,6 +350,19 @@
                     observacoes: ''
                 }))
             };
+
+            if (tipoPedido === 'local') {
+                pedido.numero_mesa = document.getElementById('numeroMesa').value;
+            } else {
+                pedido.endereco = {
+                    logradouro: document.getElementById('endereco').value,
+                    complemento: document.getElementById('complemento').value,
+                    bairro: document.getElementById('bairro').value,
+                    telefone: document.getElementById('telefone').value,
+                    ponto_referencia: document.getElementById('pontoReferencia').value,
+                    coordenadas: coordenadasAtuais
+                };
+            }
             
             fetch('/api/pedido/novo', {
                 method: 'POST',
@@ -357,6 +422,23 @@
             .catch(error => {
                 alert('Erro ao cancelar pedido: ' + error.message);
             });
+        }
+
+        // Adicionar geolocalização
+        let coordenadasAtuais = null;
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    coordenadasAtuais = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    };
+                },
+                function(error) {
+                    console.error('Erro ao obter localização:', error);
+                }
+            );
         }
     </script>
 </body>
