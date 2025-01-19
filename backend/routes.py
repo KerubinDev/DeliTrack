@@ -1,3 +1,16 @@
+"""
+DeliTrack - Sistema de Gerenciamento de Pedidos e Entregas
+Copyright (c) 2024 Kelvin Moraes
+Email: kelvin.moraes117@gmail.com
+
+Este código está protegido por direitos autorais e é distribuído sob a licença MIT.
+Você pode usar este software para fins comerciais, modificar, distribuir e sublicenciar,
+desde que inclua o aviso de copyright acima e este texto de permissão em todas as cópias
+ou partes substanciais do Software.
+
+O SOFTWARE É FORNECIDO "COMO ESTÁ", SEM GARANTIA DE QUALQUER TIPO.
+"""
+
 from flask import (
     Blueprint, render_template, request, flash, redirect, url_for, jsonify
 )

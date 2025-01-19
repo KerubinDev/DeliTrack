@@ -1,6 +1,6 @@
 # DeliTrack - Sistema de Gerenciamento de Pedidos e Entregas
 
-Sistema web completo para gerenciamento de pedidos e entregas em restaurantes.
+Sistema web completo para gerenciamento de pedidos e entregas em restaurantes, desenvolvido com foco em usabilidade e eficiência.
 
 ## Requisitos
 
@@ -9,10 +9,9 @@ Sistema web completo para gerenciamento de pedidos e entregas em restaurantes.
 
 ## Inicialização Rápida
 
-1. Clone o repositório:
+1. Instale as dependências:
 ```bash
-git clone https://github.com/seu-usuario/delitrack.git
-cd delitrack
+pip install -r requirements.txt
 ```
 
 2. Execute o sistema:
@@ -23,43 +22,80 @@ python iniciar.py
 3. Acesse no navegador:
 ```
 http://localhost:5000
-
-Login: admin@delitrack.com
-Senha: admin123
 ```
 
-## O que o sistema faz?
+## Credenciais de Acesso
 
-- Gestão de usuários (garçons, cozinheiros, entregadores, gerentes)
-- Sistema de pedidos com acompanhamento em tempo real
-- Gestão de entregas com rastreamento
-- Dashboard gerencial com métricas e relatórios
-- Sistema de notificações
-- Interface responsiva e moderna
+O sistema cria automaticamente os seguintes usuários:
 
-## Tecnologias
+- Gerente: admin@delitrack.com / admin123
+- Garçom: garcom@delitrack.com / admin123
+- Cozinheiro: cozinha@delitrack.com / admin123
+- Entregador: entrega@delitrack.com / admin123
 
-- Python com Flask
-- SQLite (banco de dados)
-- Bootstrap (interface)
-- JavaScript
+## Funcionalidades
+
+### Gerente
+- Dashboard com métricas em tempo real
+- Gestão de usuários e produtos
+- Relatórios de vendas e desempenho
+
+### Garçom
+- Cadastro de pedidos locais e delivery
+- Acompanhamento de pedidos ativos
+- Interface intuitiva para seleção de produtos
+
+### Cozinha
+- Visualização de pedidos pendentes
+- Atualização de status de preparação
+- Organização por ordem de chegada
+
+### Entregador
+- Lista de entregas pendentes e em andamento
+- Navegação integrada com mapas
+- Confirmação de entregas realizadas
+
+## Tecnologias Utilizadas
+
+- Backend: Python/Flask
+- Banco de Dados: SQLite
+- Frontend: HTML5, CSS3, JavaScript
+- UI Framework: Bootstrap 5
+- Animações: Particles.js
+- Mapas: Google Maps API
 
 ## Estrutura do Projeto
 
 ```
 delitrack/
-├── backend/           # Código backend
-├── templates/         # Templates HTML
-├── static/           # Arquivos estáticos
-└── uploads/          # Arquivos enviados
+├── backend/          # Lógica de negócios e modelos
+├── templates/        # Templates HTML
+├── static/          # Assets e scripts
+├── uploads/         # Imagens de produtos
+└── scripts/         # Scripts de inicialização
 ```
 
-## Suporte
+## Características Técnicas
 
-Em caso de dúvidas ou problemas:
-- Abra uma issue no GitHub
-- Email: suporte@delitrack.com
+- Arquitetura MVC
+- Sistema de autenticação seguro
+- APIs RESTful
+- Atualizações em tempo real
+- Design responsivo
+- Interface moderna com efeitos visuais
+- Validações de dados
+- Tratamento de erros robusto
+
+## Suporte e Contato
+
+Para suporte técnico ou dúvidas:
+- Email: kelvin.moraes117@gmail.com
+- GitHub: [Reportar um problema](https://github.com/seu-usuario/delitrack/issues)
 
 ## Licença
 
-MIT License 
+MIT License - Copyright (c) 2024 DeliTrack
+
+## Créditos
+
+Desenvolvido por Kelvin Moraes 
