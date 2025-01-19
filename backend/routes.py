@@ -411,24 +411,51 @@ def obter_metricas():
     
     # Calcular métricas
     try:
-        pedidos = Pedido.query.filter(
+        # Base query para o período selecionado
+        pedidos_base = Pedido.query.filter(
             Pedido.data_criacao >= data_inicio,
             Pedido.data_criacao < data_fim
         )
         
+        # Pedidos locais finalizados (status 'pronto')
+        pedidos_local_finalizados = pedidos_base.filter(
+            Pedido.tipo == 'local',
+            Pedido.status == 'pronto'
+        )
+        
+        # Pedidos de entrega finalizados (status 'entregue')
+        pedidos_entrega_finalizados = pedidos_base.filter(
+            Pedido.tipo == 'entrega',
+            Pedido.status == 'entregue'
+        )
+        
+        # Combinar os pedidos finalizados
+        pedidos_finalizados = pedidos_local_finalizados.union(
+            pedidos_entrega_finalizados
+        ).all()
+        
         metricas = {
-            'total_pedidos': pedidos.count(),
-            'valor_total': sum(p.valor_total for p in pedidos.all()),
+            'total_pedidos': pedidos_base.count(),
+            'pedidos_finalizados': len(pedidos_finalizados),
+            'valor_total': sum(p.valor_total for p in pedidos_finalizados),
             'pedidos_por_status': {
-                status: pedidos.filter_by(status=status).count()
-                for status in ['novo', 'preparando', 'pronto', 'entregue', 'cancelado']
+                'novo': pedidos_base.filter_by(status='novo').count(),
+                'preparando': pedidos_base.filter_by(status='preparando').count(),
+                'pronto': pedidos_local_finalizados.count(),
+                'entregue': pedidos_entrega_finalizados.count(),
+                'cancelado': pedidos_base.filter_by(status='cancelado').count()
+            },
+            'pedidos_por_tipo': {
+                'local': pedidos_base.filter_by(tipo='local').count(),
+                'entrega': pedidos_base.filter_by(tipo='entrega').count()
             },
             'pedidos_por_hora': db.session.query(
                 func.date_part('hour', Pedido.data_criacao),
                 func.count(Pedido.id)
             ).filter(
                 Pedido.data_criacao >= data_inicio,
-                Pedido.data_criacao < data_fim
+                Pedido.data_criacao < data_fim,
+                Pedido.id.in_([p.id for p in pedidos_finalizados])
             ).group_by(
                 func.date_part('hour', Pedido.data_criacao)
             ).all()
