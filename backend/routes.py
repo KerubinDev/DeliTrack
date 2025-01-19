@@ -75,18 +75,17 @@ def entregador():
     if current_user.tipo != 'entregador':
         return redirect(url_for('main.index'))
         
-    # Buscar entregas pendentes para este entregador
-    entregas_pendentes = Entrega.query.filter_by(
-        entregador_id=current_user.id,
-        status='pendente'
+    # Buscar entregas pendentes e em andamento para este entregador
+    entregas = Entrega.query.filter(
+        Entrega.entregador_id == current_user.id,
+        Entrega.status.in_(['pendente', 'em_rota'])
     ).order_by(Entrega.data_criacao.desc()).all()
     
-    print(f"DEBUG - Entregador {current_user.id} tem {len(entregas_pendentes)} entregas pendentes")
-    for entrega in entregas_pendentes:
-        print(f"DEBUG - Entrega {entrega.id} para pedido {entrega.pedido_id}")
+    print(f"DEBUG - Entregador {current_user.id} tem {len(entregas)} entregas")
+    for entrega in entregas:
+        print(f"DEBUG - Entrega {entrega.id} para pedido {entrega.pedido_id} - status: {entrega.status}")
     
-    return render_template('entregador.html',
-                         entregas_pendentes=entregas_pendentes)
+    return render_template('entregador.html', entregas=entregas)
 
 
 @main.route('/dashboard')

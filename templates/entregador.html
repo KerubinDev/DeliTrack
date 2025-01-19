@@ -5,16 +5,17 @@
 {% block content %}
 <div class="container-fluid mt-4">
     <div class="row">
-        <div class="col-12">
+        <!-- Entregas Pendentes -->
+        <div class="col-md-6">
             <h2>Entregas Pendentes</h2>
             <div class="row">
-                {% for entrega in entregas_pendentes %}
-                <div class="col-md-4 mb-4">
+                {% for entrega in entregas if entrega.status == 'pendente' %}
+                <div class="col-12 mb-4">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="card-title mb-0">
                                 Entrega #{{ entrega.id }}
-                                <span class="badge badge-warning">{{ entrega.status }}</span>
+                                <span class="badge badge-warning">Pendente</span>
                             </h5>
                             <small>{{ entrega.data_criacao.strftime('%H:%M:%S') }}</small>
                         </div>
@@ -44,15 +45,9 @@
                             </ul>
                             
                             <div class="btn-group w-100">
-                                {% if entrega.status == 'pendente' %}
                                 <button class="btn btn-warning" onclick="atualizarStatus({{ entrega.id }}, 'em_rota')">
                                     Iniciar Entrega
                                 </button>
-                                {% elif entrega.status == 'em_rota' %}
-                                <button class="btn btn-success" onclick="atualizarStatus({{ entrega.id }}, 'entregue')">
-                                    Confirmar Entrega
-                                </button>
-                                {% endif %}
                             </div>
                             
                             {% if entrega.pedido.latitude and entrega.pedido.longitude %}
@@ -70,6 +65,72 @@
                 <div class="col-12">
                     <div class="alert alert-info">
                         Não há entregas pendentes no momento.
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Entregas em Andamento -->
+        <div class="col-md-6">
+            <h2>Entregas em Andamento</h2>
+            <div class="row">
+                {% for entrega in entregas if entrega.status == 'em_rota' %}
+                <div class="col-12 mb-4">
+                    <div class="card border-primary">
+                        <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+                            <h5 class="card-title mb-0">
+                                Entrega #{{ entrega.id }}
+                                <span class="badge badge-light">Em Rota</span>
+                            </h5>
+                            <small>{{ entrega.data_criacao.strftime('%H:%M:%S') }}</small>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Cliente:</strong> {{ entrega.pedido.nome_cliente }}</p>
+                            <p><strong>Endereço:</strong><br>
+                                {{ entrega.pedido.endereco_entrega }}<br>
+                                {% if entrega.pedido.complemento_entrega %}
+                                    {{ entrega.pedido.complemento_entrega }}<br>
+                                {% endif %}
+                                {{ entrega.pedido.bairro_entrega }}<br>
+                                <strong>Telefone:</strong> {{ entrega.pedido.telefone_entrega }}
+                            </p>
+                            {% if entrega.pedido.ponto_referencia %}
+                                <p><strong>Ponto de Referência:</strong><br>
+                                {{ entrega.pedido.ponto_referencia }}</p>
+                            {% endif %}
+                            
+                            <h6>Itens:</h6>
+                            <ul class="list-group mb-3">
+                                {% for item in entrega.pedido.itens %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ item.produto.nome }}
+                                    <span class="badge badge-primary badge-pill">{{ item.quantidade }}x</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            
+                            <div class="btn-group w-100">
+                                <button class="btn btn-success" onclick="atualizarStatus({{ entrega.id }}, 'entregue')">
+                                    Confirmar Entrega
+                                </button>
+                            </div>
+                            
+                            {% if entrega.pedido.latitude and entrega.pedido.longitude %}
+                            <div class="mt-3">
+                                <a href="https://www.google.com/maps/dir/?api=1&destination={{ entrega.pedido.latitude }},{{ entrega.pedido.longitude }}" 
+                                   class="btn btn-info btn-block" target="_blank">
+                                    <i class="fas fa-map-marker-alt"></i> Abrir no Maps
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        Não há entregas em andamento no momento.
                     </div>
                 </div>
                 {% endfor %}
