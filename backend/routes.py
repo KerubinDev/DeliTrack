@@ -54,9 +54,16 @@ def cozinha():
     if current_user.tipo != 'cozinheiro':
         return redirect(url_for('main.index'))
         
+    # Buscar pedidos pendentes e em preparação
     pedidos = Pedido.query.filter(
         Pedido.status.in_(['novo', 'preparando'])
-    ).order_by(Pedido.data_criacao).all()
+    ).order_by(
+        Pedido.data_criacao.desc()
+    ).all()
+    
+    print(f"DEBUG - Total de pedidos encontrados: {len(pedidos)}")
+    for pedido in pedidos:
+        print(f"DEBUG - Pedido {pedido.id}: status={pedido.status}, tipo={pedido.tipo}")
     
     return render_template('cozinha.html', pedidos=pedidos)
 
@@ -114,11 +121,14 @@ def criar_pedido():
         if not dados:
             return jsonify({'erro': 'Dados inválidos'}), 400
             
+        print(f"DEBUG - Dados recebidos: {dados}")
+        
         pedido = Pedido(
             tipo=dados['tipo_pedido'],
             nome_cliente=dados['nome_cliente'],
             observacoes=dados.get('observacoes', ''),
-            criador_id=current_user.id
+            criador_id=current_user.id,
+            status='novo'  # Garantir que o status inicial seja 'novo'
         )
         
         if dados['tipo_pedido'] == 'local':
@@ -150,8 +160,12 @@ def criar_pedido():
             )
             pedido.itens.append(item)
         
+        print(f"DEBUG - Pedido criado: id={pedido.id}, tipo={pedido.tipo}, status={pedido.status}")
+        
         db.session.add(pedido)
         db.session.commit()
+        
+        print(f"DEBUG - Pedido salvo com sucesso: id={pedido.id}")
         
         return jsonify({
             'mensagem': 'Pedido criado com sucesso!',
@@ -159,8 +173,10 @@ def criar_pedido():
         })
         
     except KeyError as e:
+        print(f"DEBUG - Erro de campo obrigatório: {str(e)}")
         return jsonify({'erro': f'Campo obrigatório ausente: {str(e)}'}), 400
     except Exception as e:
+        print(f"DEBUG - Erro ao criar pedido: {str(e)}")
         db.session.rollback()
         return jsonify({'erro': str(e)}), 500
 

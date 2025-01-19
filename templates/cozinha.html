@@ -1,285 +1,112 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeliTrack - Cozinha</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        .pedido-card {
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .pedido-header {
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border-radius: 8px 8px 0 0;
-        }
-        .pedido-body {
-            padding: 1rem;
-        }
-        .pedido-footer {
-            padding: 1rem;
-            background-color: #f8f9fa;
-            border-radius: 0 0 8px 8px;
-        }
-        .tempo-preparo {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #dc3545;
-        }
-        .badge-aguardando {
-            background-color: #ffc107;
-            color: #000;
-        }
-        .badge-em-preparo {
-            background-color: #007bff;
-            color: #fff;
-        }
-        .badge-pronto {
-            background-color: #28a745;
-            color: #fff;
-        }
-    </style>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand" href="#">DeliTrack - Cozinha</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <span class="nav-link">Bem-vindo, {{ current_user.nome }}</span>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('auth.logout') }}">Sair</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+{% extends "base.html" %}
 
-    <div class="container-fluid mt-4">
-        <div class="row">
-            <!-- Pedidos Aguardando -->
-            <div class="col-md-4">
-                <h4>Aguardando Preparo</h4>
-                <div class="pedidos-container" id="pedidosAguardando">
-                    {% for pedido in pedidos if pedido.status == 'aguardando' %}
-                    <div class="card pedido-card" id="pedido-{{ pedido.id }}">
-                        <div class="pedido-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">Pedido #{{ pedido.id }}</h5>
-                            <span class="badge badge-aguardando">Aguardando</span>
+{% block title %}DeliTrack - Cozinha{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2>Pedidos Pendentes</h2>
+            <div class="row">
+                {% for pedido in pedidos %}
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">
+                                Pedido #{{ pedido.id }}
+                                {% if pedido.tipo == 'local' %}
+                                    <span class="badge badge-info">Mesa {{ pedido.numero_mesa }}</span>
+                                {% else %}
+                                    <span class="badge badge-warning">Entrega</span>
+                                {% endif %}
+                            </h5>
+                            <small>{{ pedido.data_criacao.strftime('%H:%M:%S') }}</small>
                         </div>
-                        <div class="pedido-body">
-                            <ul class="list-unstyled">
+                        <div class="card-body">
+                            <p><strong>Cliente:</strong> {{ pedido.nome_cliente }}</p>
+                            <h6>Itens:</h6>
+                            <ul class="list-group mb-3">
                                 {% for item in pedido.itens %}
-                                <li>
-                                    <strong>{{ item.quantidade }}x</strong> {{ item.item.nome }}
-                                    {% if item.observacao %}
-                                    <br><small class="text-muted">Obs: {{ item.observacao }}</small>
-                                    {% endif %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ item.produto.nome }}
+                                    <span class="badge badge-primary badge-pill">{{ item.quantidade }}x</span>
                                 </li>
+                                {% if item.observacoes %}
+                                <li class="list-group-item bg-light">
+                                    <small>Obs: {{ item.observacoes }}</small>
+                                </li>
+                                {% endif %}
                                 {% endfor %}
                             </ul>
                             {% if pedido.observacoes %}
-                            <div class="alert alert-info">
-                                <small>{{ pedido.observacoes }}</small>
+                            <p><strong>Observações:</strong><br>{{ pedido.observacoes }}</p>
+                            {% endif %}
+                            
+                            <div class="btn-group w-100">
+                                {% if pedido.status == 'novo' %}
+                                <button class="btn btn-warning" onclick="atualizarStatus({{ pedido.id }}, 'preparando')">
+                                    Iniciar Preparo
+                                </button>
+                                {% elif pedido.status == 'preparando' %}
+                                <button class="btn btn-success" onclick="atualizarStatus({{ pedido.id }}, 'pronto')">
+                                    Marcar como Pronto
+                                </button>
+                                {% endif %}
                             </div>
+                        </div>
+                        <div class="card-footer text-muted">
+                            Status: 
+                            {% if pedido.status == 'novo' %}
+                                <span class="badge badge-danger">Novo</span>
+                            {% elif pedido.status == 'preparando' %}
+                                <span class="badge badge-warning">Em Preparo</span>
                             {% endif %}
                         </div>
-                        <div class="pedido-footer">
-                            <button class="btn btn-primary btn-block" 
-                                    onclick="iniciarPreparo({{ pedido.id }})">
-                                Iniciar Preparo
-                            </button>
-                        </div>
                     </div>
-                    {% endfor %}
                 </div>
-            </div>
-
-            <!-- Pedidos em Preparo -->
-            <div class="col-md-4">
-                <h4>Em Preparo</h4>
-                <div class="pedidos-container" id="pedidosEmPreparo">
-                    {% for pedido in pedidos if pedido.status == 'em_preparo' %}
-                    <div class="card pedido-card" id="pedido-{{ pedido.id }}">
-                        <div class="pedido-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">Pedido #{{ pedido.id }}</h5>
-                            <span class="badge badge-em-preparo">Em Preparo</span>
-                        </div>
-                        <div class="pedido-body">
-                            <ul class="list-unstyled">
-                                {% for item in pedido.itens %}
-                                <li>
-                                    <strong>{{ item.quantidade }}x</strong> {{ item.item.nome }}
-                                    {% if item.observacao %}
-                                    <br><small class="text-muted">Obs: {{ item.observacao }}</small>
-                                    {% endif %}
-                                </li>
-                                {% endfor %}
-                            </ul>
-                            {% if pedido.observacoes %}
-                            <div class="alert alert-info">
-                                <small>{{ pedido.observacoes }}</small>
-                            </div>
-                            {% endif %}
-                            <div class="tempo-preparo" id="tempo-{{ pedido.id }}">
-                                00:00
-                            </div>
-                        </div>
-                        <div class="pedido-footer">
-                            <button class="btn btn-success btn-block" 
-                                    onclick="finalizarPreparo({{ pedido.id }})">
-                                Finalizar Preparo
-                            </button>
-                        </div>
+                {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        Não há pedidos pendentes no momento.
                     </div>
-                    {% endfor %}
                 </div>
-            </div>
-
-            <!-- Pedidos Prontos -->
-            <div class="col-md-4">
-                <h4>Prontos para Entrega</h4>
-                <div class="pedidos-container" id="pedidosProntos">
-                    {% for pedido in pedidos if pedido.status == 'pronto' %}
-                    <div class="card pedido-card" id="pedido-{{ pedido.id }}">
-                        <div class="pedido-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">Pedido #{{ pedido.id }}</h5>
-                            <span class="badge badge-pronto">Pronto</span>
-                        </div>
-                        <div class="pedido-body">
-                            <ul class="list-unstyled">
-                                {% for item in pedido.itens %}
-                                <li>
-                                    <strong>{{ item.quantidade }}x</strong> {{ item.item.nome }}
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        <div class="pedido-footer">
-                            <select class="form-control mb-2" id="entregador-{{ pedido.id }}">
-                                <option value="">Selecione um entregador...</option>
-                                {% for entregador in entregadores %}
-                                <option value="{{ entregador.id }}">{{ entregador.nome }}</option>
-                                {% endfor %}
-                            </select>
-                            <button class="btn btn-info btn-block" 
-                                    onclick="designarEntrega({{ pedido.id }})">
-                                Designar para Entrega
-                            </button>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Temporizadores para pedidos em preparo
-        const temporizadores = {};
-
-        function iniciarPreparo(pedidoId) {
-            $.ajax({
-                url: `/api/pedido/${pedidoId}/status`,
-                method: 'PUT',
-                contentType: 'application/json',
-                data: JSON.stringify({ status: 'em_preparo' }),
-                success: function(response) {
-                    const pedidoCard = $(`#pedido-${pedidoId}`);
-                    pedidoCard.find('.badge')
-                        .removeClass('badge-aguardando')
-                        .addClass('badge-em-preparo')
-                        .text('Em Preparo');
-                    
-                    // Mover card para coluna "Em Preparo"
-                    pedidoCard.appendTo('#pedidosEmPreparo');
-                    
-                    // Iniciar temporizador
-                    iniciarTemporizador(pedidoId);
-                },
-                error: function(xhr) {
-                    alert('Erro ao iniciar preparo: ' + xhr.responseJSON.erro);
-                }
+{% block scripts %}
+<script>
+function atualizarStatus(pedidoId, novoStatus) {
+    fetch(`/api/pedido/${pedidoId}/status`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: novoStatus })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.erro || 'Erro ao atualizar status');
             });
         }
+        return response.json();
+    })
+    .then(data => {
+        alert(data.mensagem);
+        location.reload();
+    })
+    .catch(error => {
+        alert('Erro ao atualizar status: ' + error.message);
+    });
+}
 
-        function finalizarPreparo(pedidoId) {
-            $.ajax({
-                url: `/api/pedido/${pedidoId}/status`,
-                method: 'PUT',
-                contentType: 'application/json',
-                data: JSON.stringify({ status: 'pronto' }),
-                success: function(response) {
-                    const pedidoCard = $(`#pedido-${pedidoId}`);
-                    pedidoCard.find('.badge')
-                        .removeClass('badge-em-preparo')
-                        .addClass('badge-pronto')
-                        .text('Pronto');
-                    
-                    // Parar temporizador
-                    if (temporizadores[pedidoId]) {
-                        clearInterval(temporizadores[pedidoId]);
-                        delete temporizadores[pedidoId];
-                    }
-                    
-                    // Mover card para coluna "Prontos"
-                    pedidoCard.appendTo('#pedidosProntos');
-                },
-                error: function(xhr) {
-                    alert('Erro ao finalizar preparo: ' + xhr.responseJSON.erro);
-                }
-            });
-        }
-
-        function designarEntrega(pedidoId) {
-            const entregadorId = $(`#entregador-${pedidoId}`).val();
-            if (!entregadorId) {
-                alert('Selecione um entregador');
-                return;
-            }
-
-            $.ajax({
-                url: '/api/entrega/nova',
-                method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    pedido_id: pedidoId,
-                    entregador_id: entregadorId
-                }),
-                success: function(response) {
-                    // Remover card do pedido
-                    $(`#pedido-${pedidoId}`).remove();
-                },
-                error: function(xhr) {
-                    alert('Erro ao designar entrega: ' + xhr.responseJSON.erro);
-                }
-            });
-        }
-
-        function iniciarTemporizador(pedidoId) {
-            let segundos = 0;
-            temporizadores[pedidoId] = setInterval(() => {
-                segundos++;
-                const minutos = Math.floor(segundos / 60);
-                const segundosRestantes = segundos % 60;
-                $(`#tempo-${pedidoId}`).text(
-                    `${minutos.toString().padStart(2, '0')}:${segundosRestantes.toString().padStart(2, '0')}`
-                );
-            }, 1000);
-        }
-
-        // Atualizar lista de pedidos a cada 30 segundos
-        setInterval(() => {
-            location.reload();
-        }, 30000);
-    </script>
-</body>
-</html>
+// Atualizar a página a cada 30 segundos
+setInterval(() => {
+    location.reload();
+}, 30000);
+</script>
+{% endblock %}
