@@ -1,3 +1,6 @@
+"""
+Sistema de autenticação
+"""
 from flask import (
     Blueprint, flash, redirect, render_template, request, url_for, current_app
 )
@@ -7,75 +10,68 @@ from datetime import datetime, timedelta
 import secrets
 from .models import Usuario, TokenRedefinicaoSenha, db
 
-bp = Blueprint('auth', __name__, url_prefix='/auth')
+auth = Blueprint('auth', __name__, url_prefix='/auth')
 
 
-@bp.route('/login', methods=('GET', 'POST'))
+@auth.route('/login', methods=['GET', 'POST'])
 def login():
-    """Rota para login de usuários."""
+    """Rota de login"""
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
-    
+        
     if request.method == 'POST':
-        email = request.form['email']
-        senha = request.form['senha']
-        erro = None
+        email = request.form.get('email')
+        senha = request.form.get('senha')
         
         usuario = Usuario.query.filter_by(email=email).first()
         
-        if usuario is None:
-            erro = 'Email não cadastrado.'
-        elif not usuario.check_senha(senha):
-            erro = 'Senha incorreta.'
-        elif not usuario.ativo:
-            erro = 'Usuário inativo. Contate o administrador.'
-            
-        if erro is None:
+        if usuario and check_password_hash(usuario.senha_hash, senha):
             login_user(usuario)
-            return redirect(url_for('main.index'))
-            
-        flash(erro, 'danger')
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('main.index'))
+        
+        flash('Email ou senha inválidos.', 'error')
     
     return render_template('auth/login.html')
 
 
-@bp.route('/logout')
+@auth.route('/logout')
 @login_required
 def logout():
-    """Rota para logout de usuários."""
+    """Rota de logout"""
     logout_user()
     return redirect(url_for('auth.login'))
 
 
-@bp.route('/alterar_senha', methods=('GET', 'POST'))
+@auth.route('/alterar-senha', methods=['GET', 'POST'])
 @login_required
 def alterar_senha():
-    """Rota para alteração de senha."""
+    """Rota para alterar senha"""
     if request.method == 'POST':
-        senha_atual = request.form['senha_atual']
-        nova_senha = request.form['nova_senha']
-        confirma_senha = request.form['confirma_senha']
-        erro = None
+        senha_atual = request.form.get('senha_atual')
+        nova_senha = request.form.get('nova_senha')
+        confirmar_senha = request.form.get('confirmar_senha')
         
-        if not current_user.check_senha(senha_atual):
-            erro = 'Senha atual incorreta.'
-        elif nova_senha != confirma_senha:
-            erro = 'As senhas não conferem.'
-        elif len(nova_senha) < 6:
-            erro = 'A nova senha deve ter pelo menos 6 caracteres.'
+        if not check_password_hash(current_user.senha_hash, senha_atual):
+            flash('Senha atual incorreta.', 'error')
+            return redirect(url_for('auth.alterar_senha'))
             
-        if erro is None:
-            current_user.set_senha(nova_senha)
-            db.session.commit()
-            flash('Senha alterada com sucesso!', 'success')
-            return redirect(url_for('main.index'))
+        if nova_senha != confirmar_senha:
+            flash('As senhas não conferem.', 'error')
+            return redirect(url_for('auth.alterar_senha'))
             
-        flash(erro, 'danger')
-    
+        if len(nova_senha) < 6:
+            flash('A nova senha deve ter pelo menos 6 caracteres.', 'error')
+            return redirect(url_for('auth.alterar_senha'))
+            
+        current_user.set_senha(nova_senha)
+        flash('Senha alterada com sucesso!', 'success')
+        return redirect(url_for('main.index'))
+        
     return render_template('auth/alterar_senha.html')
 
 
-@bp.route('/recuperar_senha', methods=('GET', 'POST'))
+@auth.route('/recuperar_senha', methods=('GET', 'POST'))
 def recuperar_senha():
     """Rota para solicitar recuperação de senha."""
     if current_user.is_authenticated:
@@ -134,7 +130,7 @@ def recuperar_senha():
     return render_template('auth/recuperar_senha.html')
 
 
-@bp.route('/redefinir_senha/<token>', methods=('GET', 'POST'))
+@auth.route('/redefinir_senha/<token>', methods=('GET', 'POST'))
 def redefinir_senha(token):
     """Rota para redefinir senha com token."""
     if current_user.is_authenticated:

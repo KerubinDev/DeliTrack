@@ -1,22 +1,34 @@
-from flask_sqlalchemy import SQLAlchemy
+"""
+Modelos do banco de dados
+"""
+from . import db, login_manager
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
-db = SQLAlchemy()
+@login_manager.user_loader
+def load_user(user_id):
+    """Carrega o usuário pelo ID"""
+    return Usuario.query.get(int(user_id))
 
 class Usuario(UserMixin, db.Model):
-    """Modelo para usuários do sistema."""
+    """Modelo de usuário"""
     __tablename__ = 'usuarios'
     
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     senha_hash = db.Column(db.String(128))
-    tipo = db.Column(db.String(20), nullable=False)  # garcom, chef, entregador, gerente
+    tipo = db.Column(db.String(20), nullable=False)  # gerente, garcom, cozinheiro, entregador
     ativo = db.Column(db.Boolean, default=True)
-    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+    data_cadastro = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Relacionamentos
+    pedidos_criados = db.relationship('Pedido', backref='criador', lazy=True,
+                                    foreign_keys='Pedido.criador_id')
+    entregas = db.relationship('Pedido', backref='entregador', lazy=True,
+                             foreign_keys='Pedido.entregador_id')
+
     def set_senha(self, senha):
         self.senha_hash = generate_password_hash(senha)
     
@@ -69,33 +81,45 @@ class ItemMenu(db.Model):
 
 
 class Pedido(db.Model):
-    """Modelo para pedidos."""
+    """Modelo de pedido"""
     __tablename__ = 'pedidos'
     
     id = db.Column(db.Integer, primary_key=True)
-    cliente_id = db.Column(db.Integer, db.ForeignKey('clientes.id'), nullable=False)
-    status = db.Column(db.String(20), nullable=False)  # aguardando, em_preparo, pronto, entregue
+    numero_mesa = db.Column(db.Integer)
+    status = db.Column(db.String(20), default='novo')  # novo, preparando, pronto, entregue, cancelado
     observacoes = db.Column(db.Text)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
-    data_atualizacao = db.Column(db.DateTime, onupdate=datetime.utcnow)
-    data_conclusao = db.Column(db.DateTime)
-    itens = db.relationship('ItemPedido', backref='pedido', lazy=True)
-    valor_total = db.Column(db.Float)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relacionamentos
+    criador_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    entregador_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
+    itens = db.relationship('ItemPedido', backref='pedido', lazy=True, cascade='all, delete-orphan')
+    
+    @property
+    def valor_total(self):
+        """Calcula o valor total do pedido"""
+        return sum(item.subtotal for item in self.itens)
 
 
 class ItemPedido(db.Model):
-    """Modelo para itens de um pedido."""
+    """Modelo de item do pedido"""
     __tablename__ = 'itens_pedido'
     
     id = db.Column(db.Integer, primary_key=True)
-    pedido_id = db.Column(db.Integer, db.ForeignKey('pedidos.id'), nullable=False)
-    item_id = db.Column(db.Integer, db.ForeignKey('itens_menu.id'), nullable=False)
     quantidade = db.Column(db.Integer, nullable=False)
-    observacao = db.Column(db.Text)
     valor_unitario = db.Column(db.Float, nullable=False)
-    valor_total = db.Column(db.Float, nullable=False)
+    observacoes = db.Column(db.Text)
     
-    item = db.relationship('ItemMenu', backref=db.backref('pedidos', lazy=True))
+    # Relacionamentos
+    pedido_id = db.Column(db.Integer, db.ForeignKey('pedidos.id'), nullable=False)
+    produto_id = db.Column(db.Integer, db.ForeignKey('itens_menu.id'), nullable=False)
+    produto = db.relationship('ItemMenu')
+    
+    @property
+    def subtotal(self):
+        """Calcula o subtotal do item"""
+        return self.quantidade * self.valor_unitario
 
 
 class Entrega(db.Model):
@@ -112,4 +136,18 @@ class Entrega(db.Model):
     observacoes = db.Column(db.Text)
     
     pedido = db.relationship('Pedido', backref=db.backref('entrega', uselist=False))
-    entregador = db.relationship('Usuario', backref=db.backref('entregas', lazy=True)) 
+    entregador = db.relationship('Usuario', backref=db.backref('entregas', lazy=True))
+
+
+class Produto(db.Model):
+    """Modelo de produto"""
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=False)
+    descricao = db.Column(db.Text)
+    preco = db.Column(db.Float, nullable=False)
+    categoria = db.Column(db.String(50))
+    imagem = db.Column(db.String(200))
+    ativo = db.Column(db.Boolean, default=True)
+    
+    # Relacionamentos
+    itens_pedido = db.relationship('ItemPedido', backref='item', lazy=True) 

@@ -15,123 +15,66 @@ bp = Blueprint('main', __name__)
 @bp.route('/')
 @login_required
 def index():
-    """Rota principal que redireciona baseado no tipo de usuário."""
-    if current_user.tipo == 'garcom':
-        return redirect(url_for('main.tela_garcom'))
-    elif current_user.tipo == 'chef':
-        return redirect(url_for('main.tela_cozinha'))
-    elif current_user.tipo == 'entregador':
-        return redirect(url_for('main.tela_entregador'))
-    elif current_user.tipo == 'gerente':
+    """Rota principal - redireciona para a interface adequada"""
+    if current_user.tipo == 'gerente':
         return redirect(url_for('main.dashboard'))
-    return redirect(url_for('auth.login'))
+    elif current_user.tipo == 'garcom':
+        return redirect(url_for('main.garcom'))
+    elif current_user.tipo == 'cozinheiro':
+        return redirect(url_for('main.cozinha'))
+    elif current_user.tipo == 'entregador':
+        return redirect(url_for('main.entregador'))
+    return redirect(url_for('main.dashboard'))
 
 
 @bp.route('/garcom')
 @login_required
-def tela_garcom():
-    """Tela do garçom para gerenciar pedidos."""
+def garcom():
+    """Interface do garçom"""
     if current_user.tipo != 'garcom':
-        flash('Acesso não autorizado', 'danger')
         return redirect(url_for('main.index'))
-    
-    clientes = Cliente.query.all()
-    itens_menu = ItemMenu.query.all()
-    pedidos_ativos = Pedido.query.filter(
-        Pedido.status.in_(['aguardando', 'em_preparo'])
-    ).order_by(Pedido.data_criacao.desc()).all()
-    
-    return render_template(
-        'garcom.html',
-        clientes=clientes,
-        itens_menu=itens_menu,
-        pedidos_ativos=pedidos_ativos
-    )
+    return render_template('garcom.html')
 
 
 @bp.route('/cozinha')
 @login_required
-def tela_cozinha():
-    """Tela da cozinha para gerenciar preparo dos pedidos."""
-    if current_user.tipo != 'chef':
-        flash('Acesso não autorizado', 'danger')
+def cozinha():
+    """Interface da cozinha"""
+    if current_user.tipo != 'cozinheiro':
         return redirect(url_for('main.index'))
-    
-    pedidos = Pedido.query.filter(
-        Pedido.status.in_(['aguardando', 'em_preparo'])
-    ).order_by(Pedido.data_criacao).all()
-    
-    return render_template('cozinha.html', pedidos=pedidos)
+    return render_template('cozinha.html')
 
 
 @bp.route('/entregador')
 @login_required
-def tela_entregador():
-    """Tela do entregador para gerenciar entregas."""
+def entregador():
+    """Interface do entregador"""
     if current_user.tipo != 'entregador':
-        flash('Acesso não autorizado', 'danger')
         return redirect(url_for('main.index'))
-    
-    entregas_pendentes = Entrega.query.filter_by(
-        entregador_id=current_user.id,
-        status='pendente'
-    ).order_by(Entrega.data_criacao.desc()).all()
-    
-    entregas_hoje = Entrega.query.filter(
-        Entrega.entregador_id == current_user.id,
-        Entrega.data_entrega >= date.today()
-    ).order_by(Entrega.data_criacao.desc()).all()
-    
-    return render_template(
-        'entregador.html',
-        entregas_pendentes=entregas_pendentes,
-        entregas_hoje=entregas_hoje
-    )
+    return render_template('entregador.html')
 
 
 @bp.route('/dashboard')
 @login_required
 def dashboard():
-    """Dashboard para gerenciamento geral."""
+    """Dashboard gerencial"""
     if current_user.tipo != 'gerente':
-        flash('Acesso não autorizado', 'danger')
         return redirect(url_for('main.index'))
+        
+    pedidos = Pedido.query.order_by(Pedido.data_criacao.desc()).limit(10).all()
+    usuarios = Usuario.query.all()
     
-    # Métricas gerais
-    hoje = date.today()
-    pedidos_hoje = Pedido.query.filter(
-        func.date(Pedido.data_criacao) == hoje
-    ).count()
+    stats = {
+        'total_pedidos': Pedido.query.count(),
+        'pedidos_hoje': Pedido.query.filter(Pedido.data_criacao >= datetime.today()).count(),
+        'usuarios_ativos': Usuario.query.filter_by(ativo=True).count(),
+        'valor_total': sum(p.valor_total for p in Pedido.query.all())
+    }
     
-    pedidos_andamento = Pedido.query.filter(
-        Pedido.status.in_(['aguardando', 'em_preparo'])
-    ).count()
-    
-    entregas_concluidas = Entrega.query.filter(
-        func.date(Entrega.data_entrega) == hoje,
-        Entrega.status == 'entregue'
-    ).count()
-    
-    faturamento_hoje = db.session.query(
-        func.sum(Pedido.valor_total)
-    ).filter(
-        func.date(Pedido.data_criacao) == hoje,
-        Pedido.status != 'cancelado'
-    ).scalar() or 0
-    
-    # Dados para gráficos
-    pedidos_por_status = db.session.query(
-        Pedido.status, func.count(Pedido.id)
-    ).group_by(Pedido.status).all()
-    
-    return render_template(
-        'dashboard.html',
-        pedidos_hoje=pedidos_hoje,
-        pedidos_andamento=pedidos_andamento,
-        entregas_concluidas=entregas_concluidas,
-        faturamento_hoje=faturamento_hoje,
-        pedidos_por_status=dict(pedidos_por_status)
-    )
+    return render_template('dashboard.html', 
+                         pedidos=pedidos,
+                         usuarios=usuarios,
+                         stats=stats)
 
 
 # APIs para atualização em tempo real
