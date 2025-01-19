@@ -5,7 +5,7 @@ from flask_login import login_required, current_user
 from datetime import datetime, date
 from sqlalchemy import func
 from .models import (
-    Usuario, Cliente, Pedido, ItemPedido, Entrega, ItemMenu, db
+    Usuario, Pedido, ItemPedido, Entrega, Produto, db
 )
 
 # Blueprint para organizar as rotas
@@ -33,7 +33,15 @@ def garcom():
     """Interface do garçom"""
     if current_user.tipo != 'garcom':
         return redirect(url_for('main.index'))
-    return render_template('garcom.html')
+        
+    produtos = Produto.query.filter_by(ativo=True).all()
+    pedidos_ativos = Pedido.query.filter(
+        Pedido.status.in_(['novo', 'preparando'])
+    ).order_by(Pedido.data_criacao.desc()).all()
+    
+    return render_template('garcom.html',
+                         produtos=produtos,
+                         pedidos_ativos=pedidos_ativos)
 
 
 @main.route('/cozinha')
@@ -42,7 +50,12 @@ def cozinha():
     """Interface da cozinha"""
     if current_user.tipo != 'cozinheiro':
         return redirect(url_for('main.index'))
-    return render_template('cozinha.html')
+        
+    pedidos = Pedido.query.filter(
+        Pedido.status.in_(['novo', 'preparando'])
+    ).order_by(Pedido.data_criacao).all()
+    
+    return render_template('cozinha.html', pedidos=pedidos)
 
 
 @main.route('/entregador')
@@ -51,7 +64,14 @@ def entregador():
     """Interface do entregador"""
     if current_user.tipo != 'entregador':
         return redirect(url_for('main.index'))
-    return render_template('entregador.html')
+        
+    entregas_pendentes = Entrega.query.filter_by(
+        entregador_id=current_user.id,
+        status='pendente'
+    ).order_by(Entrega.data_criacao.desc()).all()
+    
+    return render_template('entregador.html',
+                         entregas_pendentes=entregas_pendentes)
 
 
 @main.route('/dashboard')
@@ -99,11 +119,15 @@ def criar_pedido():
         db.session.flush()
         
         for item in dados['itens']:
+            produto = Produto.query.get(item['produto_id'])
+            if not produto:
+                raise ValueError(f"Produto {item['produto_id']} não encontrado")
+                
             item_pedido = ItemPedido(
                 pedido_id=novo_pedido.id,
-                produto_id=item['produto_id'],
+                produto_id=produto.id,
                 quantidade=item['quantidade'],
-                valor_unitario=item['valor_unitario'],
+                valor_unitario=produto.preco,
                 observacoes=item.get('observacoes', '')
             )
             db.session.add(item_pedido)
@@ -119,8 +143,8 @@ def criar_pedido():
 @main.route('/api/pedido/<int:pedido_id>/status', methods=['PUT'])
 @login_required
 def atualizar_status_pedido(pedido_id):
-    """API para atualizar status do pedido."""
-    if current_user.tipo not in ['chef', 'entregador', 'garcom']:
+    """API para atualizar status do pedido"""
+    if current_user.tipo not in ['cozinheiro', 'entregador', 'garcom']:
         return jsonify({'erro': 'Não autorizado'}), 403
     
     pedido = Pedido.query.get_or_404(pedido_id)
@@ -130,8 +154,8 @@ def atualizar_status_pedido(pedido_id):
     # Validar transições de status permitidas
     status_permitidos = {
         'garcom': ['cancelado'],
-        'chef': ['em_preparo', 'pronto'],
-        'entregador': ['em_entrega', 'entregue']
+        'cozinheiro': ['preparando', 'pronto'],
+        'entregador': ['entregue']
     }
     
     if novo_status not in status_permitidos[current_user.tipo]:
@@ -139,8 +163,6 @@ def atualizar_status_pedido(pedido_id):
     
     try:
         pedido.status = novo_status
-        if novo_status == 'entregue':
-            pedido.data_conclusao = datetime.now()
         db.session.commit()
         return jsonify({'mensagem': 'Status atualizado com sucesso'})
     
@@ -152,8 +174,8 @@ def atualizar_status_pedido(pedido_id):
 @main.route('/api/entrega/nova', methods=['POST'])
 @login_required
 def criar_entrega():
-    """API para criar nova entrega."""
-    if current_user.tipo != 'chef':
+    """API para criar nova entrega"""
+    if current_user.tipo != 'cozinheiro':
         return jsonify({'erro': 'Não autorizado'}), 403
     
     dados = request.get_json()
@@ -164,13 +186,12 @@ def criar_entrega():
             return jsonify({'erro': 'Pedido não está pronto para entrega'}), 400
         
         nova_entrega = Entrega(
-            pedido_id=dados['pedido_id'],
+            pedido_id=pedido.id,
             entregador_id=dados['entregador_id'],
-            status='pendente',
-            data_criacao=datetime.now()
+            status='pendente'
         )
         db.session.add(nova_entrega)
-        pedido.status = 'em_entrega'
+        pedido.status = 'entregue'
         db.session.commit()
         return jsonify({'mensagem': 'Entrega criada com sucesso'})
     
@@ -182,7 +203,7 @@ def criar_entrega():
 @main.route('/api/entrega/<int:entrega_id>/status', methods=['PUT'])
 @login_required
 def atualizar_status_entrega(entrega_id):
-    """API para atualizar status da entrega."""
+    """API para atualizar status da entrega"""
     if current_user.tipo != 'entregador':
         return jsonify({'erro': 'Não autorizado'}), 403
     
@@ -191,10 +212,12 @@ def atualizar_status_entrega(entrega_id):
     
     try:
         entrega.status = dados['status']
-        if dados['status'] == 'entregue':
+        if dados['status'] == 'em_rota':
+            entrega.data_saida = datetime.now()
+        elif dados['status'] == 'entregue':
             entrega.data_entrega = datetime.now()
             entrega.pedido.status = 'entregue'
-            entrega.pedido.data_conclusao = datetime.now()
+        
         db.session.commit()
         return jsonify({'mensagem': 'Status atualizado com sucesso'})
     

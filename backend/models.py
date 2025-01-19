@@ -113,8 +113,7 @@ class ItemPedido(db.Model):
     
     # Relacionamentos
     pedido_id = db.Column(db.Integer, db.ForeignKey('pedidos.id'), nullable=False)
-    produto_id = db.Column(db.Integer, db.ForeignKey('itens_menu.id'), nullable=False)
-    produto = db.relationship('ItemMenu')
+    produto_id = db.Column(db.Integer, db.ForeignKey('produtos.id'), nullable=False)
     
     @property
     def subtotal(self):
@@ -123,24 +122,27 @@ class ItemPedido(db.Model):
 
 
 class Entrega(db.Model):
-    """Modelo para entregas."""
+    """Modelo para entregas"""
     __tablename__ = 'entregas'
     
     id = db.Column(db.Integer, primary_key=True)
-    pedido_id = db.Column(db.Integer, db.ForeignKey('pedidos.id'), nullable=False)
-    entregador_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
-    status = db.Column(db.String(20), nullable=False)  # pendente, em_rota, entregue
+    status = db.Column(db.String(20), default='pendente')  # pendente, em_rota, entregue
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_saida = db.Column(db.DateTime)
     data_entrega = db.Column(db.DateTime)
     observacoes = db.Column(db.Text)
     
+    # Relacionamentos
+    pedido_id = db.Column(db.Integer, db.ForeignKey('pedidos.id'), nullable=False)
+    entregador_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     pedido = db.relationship('Pedido', backref=db.backref('entrega', uselist=False))
-    entregador = db.relationship('Usuario', backref=db.backref('entregas', lazy=True))
+    entregador = db.relationship('Usuario', backref=db.backref('entregas_realizadas', lazy=True))
 
 
 class Produto(db.Model):
     """Modelo de produto"""
+    __tablename__ = 'produtos'
+    
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     descricao = db.Column(db.Text)
@@ -150,4 +152,4 @@ class Produto(db.Model):
     ativo = db.Column(db.Boolean, default=True)
     
     # Relacionamentos
-    itens_pedido = db.relationship('ItemPedido', backref='item', lazy=True) 
+    itens_pedido = db.relationship('ItemPedido', backref='produto', lazy=True) 
