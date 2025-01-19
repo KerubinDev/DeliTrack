@@ -75,10 +75,15 @@ def entregador():
     if current_user.tipo != 'entregador':
         return redirect(url_for('main.index'))
         
+    # Buscar entregas pendentes para este entregador
     entregas_pendentes = Entrega.query.filter_by(
         entregador_id=current_user.id,
         status='pendente'
     ).order_by(Entrega.data_criacao.desc()).all()
+    
+    print(f"DEBUG - Entregador {current_user.id} tem {len(entregas_pendentes)} entregas pendentes")
+    for entrega in entregas_pendentes:
+        print(f"DEBUG - Entrega {entrega.id} para pedido {entrega.pedido_id}")
     
     return render_template('entregador.html',
                          entregas_pendentes=entregas_pendentes)
@@ -204,10 +209,32 @@ def atualizar_status_pedido(pedido_id):
     
     try:
         pedido.status = novo_status
+        
+        # Se o pedido for marcado como pronto e for do tipo entrega,
+        # criar automaticamente uma entrega
+        if novo_status == 'pronto' and pedido.tipo == 'entrega':
+            # Buscar um entregador disponível
+            entregador = Usuario.query.filter_by(
+                tipo='entregador',
+                ativo=True
+            ).first()
+            
+            if entregador:
+                nova_entrega = Entrega(
+                    pedido_id=pedido.id,
+                    entregador_id=entregador.id,
+                    status='pendente'
+                )
+                db.session.add(nova_entrega)
+                print(f"DEBUG - Criando entrega para pedido {pedido.id} com entregador {entregador.id}")
+            else:
+                print("DEBUG - Nenhum entregador disponível encontrado")
+        
         db.session.commit()
         return jsonify({'mensagem': 'Status atualizado com sucesso'})
     
     except Exception as e:
+        print(f"DEBUG - Erro ao atualizar status: {str(e)}")
         db.session.rollback()
         return jsonify({'erro': str(e)}), 400
 
