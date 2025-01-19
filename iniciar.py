@@ -48,7 +48,7 @@ def criar_usuarios_admin():
         if not usuario:
             novo_usuario = Usuario(
                 email=dados['email'],
-                senha=generate_password_hash(dados['senha']),
+                senha_hash=generate_password_hash(dados['senha']),
                 nome=dados['nome'],
                 tipo=dados['tipo'],
                 ativo=True
