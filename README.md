@@ -1,177 +1,153 @@
 # DeliTrack - Sistema de Gerenciamento de Pedidos e Entregas
 
-O DeliTrack é um sistema web completo para gerenciamento de pedidos e entregas em restaurantes, desenvolvido com Flask e SQLAlchemy.
+Sistema web completo para gerenciamento de pedidos e entregas em restaurantes, desenvolvido com Flask e SQLAlchemy.
 
 ## Funcionalidades
 
-- **Gerenciamento de Usuários**
-  - Cadastro e autenticação de usuários
-  - Diferentes níveis de acesso (garçom, chef, entregador, gerente)
-  - Alteração de senha e recuperação por email
+- Gestão de usuários (garçons, cozinheiros, entregadores, gerentes)
+- Sistema de pedidos com acompanhamento em tempo real
+- Gestão de entregas com rastreamento
+- Dashboard gerencial com métricas e relatórios
+- Sistema de notificações
+- Interface responsiva e moderna
 
-- **Gestão de Pedidos**
-  - Criação e acompanhamento de pedidos
-  - Interface específica para garçons
-  - Painel de controle para a cozinha
-  - Sistema de notificações em tempo real
+## Tecnologias
 
-- **Sistema de Entregas**
-  - Rastreamento de entregadores em tempo real
-  - Mapa interativo com rotas de entrega
-  - Gestão de status das entregas
-  - Cálculo de tempo estimado
-
-- **Dashboard Gerencial**
-  - Métricas em tempo real
-  - Gráficos de desempenho
-  - Relatórios personalizados
-  - Gestão de usuários do sistema
-
-## Tecnologias Utilizadas
-
-- **Backend**
-  - Python 3.8+
-  - Flask 3.0.0
-  - SQLAlchemy 2.0.23
-  - Flask-Login para autenticação
-  - Flask-Mail para envio de emails
-  - Flask-Migrate para migrações do banco de dados
-
-- **Frontend**
-  - HTML5, CSS3, JavaScript
-  - Bootstrap 4.5.2
-  - jQuery 3.5.1
-  - Leaflet.js para mapas
-  - Chart.js para gráficos
-
-- **Banco de Dados**
-  - SQLite (desenvolvimento)
-  - PostgreSQL (produção)
+- Python 3.12+
+- Flask (Framework web)
+- SQLAlchemy (ORM)
+- SQLite (Desenvolvimento)
+- PostgreSQL (Produção)
+- Bootstrap 4 (Frontend)
+- JavaScript (Interatividade)
 
 ## Instalação
 
 1. Clone o repositório:
-   ```bash
-   git clone https://github.com/seu-usuario/delitrack.git
-   cd delitrack
-   ```
+```bash
+git clone https://github.com/seu-usuario/delitrack.git
+cd delitrack
+```
 
-2. Crie um ambiente virtual e ative-o:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # Linux/Mac
-   venv\Scripts\activate     # Windows
-   ```
+2. Instale as dependências:
+```bash
+pip install -r requirements.txt
+```
 
-3. Instale as dependências:
-   ```bash
-   pip install -r requirements.txt
-   ```
+3. Configure as variáveis de ambiente:
+```bash
+# Windows (PowerShell)
+copy .env.example .env
+# Linux/Mac
+cp .env.example .env
+```
 
-4. Configure as variáveis de ambiente:
-   ```bash
-   cp .env.example .env
-   # Edite o arquivo .env com suas configurações
-   ```
+4. Edite o arquivo `.env` com suas configurações
 
 5. Inicialize o banco de dados:
-   ```bash
-   flask db upgrade
-   ```
+```bash
+flask db upgrade
+```
 
-6. Execute o servidor de desenvolvimento:
-   ```bash
-   python run.py
-   ```
+6. Crie o usuário administrador:
+```bash
+python scripts/criar_admin.py
+```
+
+## Executando o Sistema
+
+1. Desenvolvimento:
+```bash
+python run.py
+```
+
+2. Produção:
+```bash
+gunicorn "backend:create_app()"
+```
+
+O sistema estará disponível em `http://localhost:5000`
+
+## Credenciais Iniciais
+
+- Email: admin@delitrack.com
+- Senha: admin123
+
+**Importante**: Altere a senha do administrador após o primeiro login.
 
 ## Estrutura do Projeto
 
 ```
 delitrack/
-├── backend/
-│   ├── __init__.py
-│   ├── app.py
-│   ├── auth.py
-│   ├── config.py
-│   ├── models.py
-│   └── routes.py
-├── frontend/
-│   ├── dashboard.html
-│   ├── cozinha.html
-│   ├── garcom.html
-│   └── entregadores.html
-├── migrations/
-│   ├── versions/
-│   ├── alembic.ini
-│   ├── env.py
-│   └── script.py.mako
-├── uploads/
-├── .env
-├── .gitignore
-├── README.md
-├── requirements.txt
-└── run.py
+├── backend/           # Código backend
+│   ├── models.py     # Modelos do banco de dados
+│   ├── routes.py     # Rotas da aplicação
+│   ├── auth.py       # Sistema de autenticação
+│   └── config.py     # Configurações
+├── templates/         # Templates HTML
+│   ├── auth/         # Templates de autenticação
+│   └── email/        # Templates de email
+├── static/           # Arquivos estáticos
+├── migrations/       # Migrações do banco
+├── scripts/          # Scripts utilitários
+└── uploads/          # Arquivos enviados
 ```
 
 ## Configuração do Ambiente
 
-1. **Variáveis de Ambiente**
-   - `FLASK_APP`: Nome do módulo da aplicação
-   - `FLASK_ENV`: Ambiente (development, production)
-   - `SECRET_KEY`: Chave secreta para sessões
-   - `DATABASE_URL`: URL do banco de dados
-   - `MAIL_SERVER`: Servidor de email
-   - `MAIL_PORT`: Porta do servidor de email
-   - `MAIL_USERNAME`: Usuário do email
-   - `MAIL_PASSWORD`: Senha do email
+### Variáveis de Ambiente (.env)
 
-2. **Banco de Dados**
-   - Desenvolvimento: SQLite
-   - Produção: Configure `DATABASE_URL` para PostgreSQL
+```
+FLASK_APP=run.py
+FLASK_ENV=development
+SECRET_KEY=sua-chave-secreta
+
+# Banco de dados
+DATABASE_URL=sqlite:///delitrack.db
+
+# Email
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=True
+MAIL_USERNAME=seu-email@gmail.com
+MAIL_PASSWORD=sua-senha
+MAIL_DEFAULT_SENDER=seu-email@gmail.com
+
+# Uploads
+MAX_CONTENT_LENGTH=16777216  # 16MB
+```
 
 ## Desenvolvimento
 
-1. **Criar nova migração**:
-   ```bash
-   flask db migrate -m "descrição da migração"
-   flask db upgrade
-   ```
+1. Criar novas migrações:
+```bash
+flask db migrate -m "Descrição da migração"
+```
 
-2. **Executar testes**:
-   ```bash
-   pytest
-   ```
+2. Aplicar migrações:
+```bash
+flask db upgrade
+```
 
-3. **Verificar cobertura de testes**:
-   ```bash
-   coverage run -m pytest
-   coverage report
-   ```
+3. Executar testes:
+```bash
+python -m pytest
+```
 
-## Deployment
+## Produção
 
-1. **Preparação**:
-   - Configure as variáveis de ambiente de produção
-   - Atualize o banco de dados
-   - Colete arquivos estáticos
-
-2. **Gunicorn**:
-   ```bash
-   gunicorn "backend.app:create_app()"
-   ```
-
-## Contribuição
-
-1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
-3. Commit suas mudanças (`git commit -am 'Adiciona nova feature'`)
-4. Push para a branch (`git push origin feature/nova-feature`)
-5. Crie um Pull Request
-
-## Licença
-
-Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes.
+1. Configure o PostgreSQL
+2. Atualize DATABASE_URL no .env
+3. Configure um servidor web (nginx/apache)
+4. Use gunicorn como servidor WSGI
+5. Configure SSL/TLS para HTTPS
 
 ## Suporte
 
-Para suporte, envie um email para suporte@delitrack.com ou abra uma issue no GitHub. 
+Em caso de dúvidas ou problemas:
+- Abra uma issue no GitHub
+- Envie um email para suporte@delitrack.com
+
+## Licença
+
+Este projeto está licenciado sob a MIT License. 
