@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}DeliTrack - Login{% endblock %}
+
+{% block extra_style %}
+.login-container {
+    max-width: 400px;
+    margin: 2rem auto;
+}
+.card {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.card-header {
+    background-color: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+}
+.btn-primary {
+    width: 100%;
+}
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="card">
+        <div class="card-header">
+            <h4 class="mb-0">Login</h4>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="senha">Senha</label>
+                    <input type="password" class="form-control" id="senha" name="senha" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Entrar</button>
+            </form>
+            <div class="text-center mt-3">
+                <a href="{{ url_for('auth.recuperar_senha') }}">Esqueceu sua senha?</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
