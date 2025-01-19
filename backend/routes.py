@@ -2,8 +2,9 @@ from flask import (
     Blueprint, render_template, request, flash, redirect, url_for, jsonify
 )
 from flask_login import login_required, current_user
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from sqlalchemy import func
+from werkzeug.security import generate_password_hash
 from .models import (
     Usuario, Pedido, ItemPedido, Entrega, Produto, db
 )
@@ -223,4 +224,151 @@ def atualizar_status_entrega(entrega_id):
     
     except Exception as e:
         db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+
+# APIs para gerenciamento de usuários
+@main.route('/api/usuario/novo', methods=['POST'])
+@login_required
+def criar_usuario():
+    """API para criar novo usuário"""
+    if current_user.tipo != 'gerente':
+        return jsonify({'erro': 'Não autorizado'}), 403
+    
+    dados = request.get_json()
+    
+    try:
+        # Verificar se email já existe
+        if Usuario.query.filter_by(email=dados['email']).first():
+            return jsonify({'erro': 'Email já cadastrado'}), 400
+            
+        novo_usuario = Usuario(
+            nome=dados['nome'],
+            email=dados['email'],
+            tipo=dados['tipo'],
+            ativo=True
+        )
+        novo_usuario.set_senha(dados['senha'])
+        
+        db.session.add(novo_usuario)
+        db.session.commit()
+        
+        return jsonify({
+            'mensagem': 'Usuário criado com sucesso',
+            'id': novo_usuario.id
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+@main.route('/api/usuario/<int:usuario_id>', methods=['PUT'])
+@login_required
+def atualizar_usuario(usuario_id):
+    """API para atualizar usuário"""
+    if current_user.tipo != 'gerente':
+        return jsonify({'erro': 'Não autorizado'}), 403
+    
+    usuario = Usuario.query.get_or_404(usuario_id)
+    dados = request.get_json()
+    
+    try:
+        if 'nome' in dados:
+            usuario.nome = dados['nome']
+        if 'email' in dados and dados['email'] != usuario.email:
+            if Usuario.query.filter_by(email=dados['email']).first():
+                return jsonify({'erro': 'Email já cadastrado'}), 400
+            usuario.email = dados['email']
+        if 'tipo' in dados:
+            usuario.tipo = dados['tipo']
+        if 'senha' in dados:
+            usuario.set_senha(dados['senha'])
+        if 'ativo' in dados:
+            usuario.ativo = dados['ativo']
+            
+        db.session.commit()
+        return jsonify({'mensagem': 'Usuário atualizado com sucesso'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+@main.route('/api/usuario/<int:usuario_id>', methods=['DELETE'])
+@login_required
+def deletar_usuario(usuario_id):
+    """API para deletar usuário"""
+    if current_user.tipo != 'gerente':
+        return jsonify({'erro': 'Não autorizado'}), 403
+    
+    if usuario_id == current_user.id:
+        return jsonify({'erro': 'Não é possível deletar o próprio usuário'}), 400
+        
+    usuario = Usuario.query.get_or_404(usuario_id)
+    
+    try:
+        usuario.ativo = False  # Soft delete
+        db.session.commit()
+        return jsonify({'mensagem': 'Usuário desativado com sucesso'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+# APIs para métricas do dashboard
+@main.route('/api/dashboard/metricas')
+@login_required
+def obter_metricas():
+    """API para obter métricas do dashboard"""
+    if current_user.tipo != 'gerente':
+        return jsonify({'erro': 'Não autorizado'}), 403
+    
+    periodo = request.args.get('periodo', 'hoje')
+    data_inicio = request.args.get('dataInicio')
+    data_fim = request.args.get('dataFim')
+    
+    # Definir período de análise
+    hoje = date.today()
+    if periodo == 'hoje':
+        data_inicio = hoje
+        data_fim = hoje + timedelta(days=1)
+    elif periodo == 'semana':
+        data_inicio = hoje - timedelta(days=7)
+        data_fim = hoje + timedelta(days=1)
+    elif periodo == 'mes':
+        data_inicio = hoje.replace(day=1)
+        data_fim = hoje + timedelta(days=1)
+    elif periodo == 'personalizado':
+        try:
+            data_inicio = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+            data_fim = datetime.strptime(data_fim, '%Y-%m-%d').date() + timedelta(days=1)
+        except:
+            return jsonify({'erro': 'Datas inválidas'}), 400
+    
+    # Calcular métricas
+    try:
+        pedidos = Pedido.query.filter(
+            Pedido.data_criacao >= data_inicio,
+            Pedido.data_criacao < data_fim
+        )
+        
+        metricas = {
+            'total_pedidos': pedidos.count(),
+            'valor_total': sum(p.valor_total for p in pedidos.all()),
+            'pedidos_por_status': {
+                status: pedidos.filter_by(status=status).count()
+                for status in ['novo', 'preparando', 'pronto', 'entregue', 'cancelado']
+            },
+            'pedidos_por_hora': db.session.query(
+                func.date_part('hour', Pedido.data_criacao),
+                func.count(Pedido.id)
+            ).filter(
+                Pedido.data_criacao >= data_inicio,
+                Pedido.data_criacao < data_fim
+            ).group_by(
+                func.date_part('hour', Pedido.data_criacao)
+            ).all()
+        }
+        
+        return jsonify(metricas)
+        
+    except Exception as e:
         return jsonify({'erro': str(e)}), 400
