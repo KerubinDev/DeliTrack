@@ -55,29 +55,20 @@ class TokenRedefinicaoSenha(db.Model):
         return datetime.utcnow() > self.expiracao
 
 
-class Cliente(db.Model):
-    """Modelo para clientes."""
-    __tablename__ = 'clientes'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
-    telefone = db.Column(db.String(20))
-    endereco = db.Column(db.String(200))
-    data_cadastro = db.Column(db.DateTime, default=datetime.utcnow)
-    pedidos = db.relationship('Pedido', backref='cliente', lazy=True)
-
-
-class ItemMenu(db.Model):
-    """Modelo para itens do menu."""
-    __tablename__ = 'itens_menu'
+class Produto(db.Model):
+    """Modelo de produto"""
+    __tablename__ = 'produtos'
     
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     descricao = db.Column(db.Text)
     preco = db.Column(db.Float, nullable=False)
     categoria = db.Column(db.String(50))
-    disponivel = db.Column(db.Boolean, default=True)
-    tempo_preparo = db.Column(db.Integer)  # em minutos
+    imagem = db.Column(db.String(200))
+    ativo = db.Column(db.Boolean, default=True)
+    
+    # Relacionamentos
+    itens_pedido = db.relationship('ItemPedido', backref='produto', lazy=True)
 
 
 class Pedido(db.Model):
@@ -136,20 +127,4 @@ class Entrega(db.Model):
     pedido_id = db.Column(db.Integer, db.ForeignKey('pedidos.id'), nullable=False)
     entregador_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     pedido = db.relationship('Pedido', backref=db.backref('entrega', uselist=False))
-    entregador = db.relationship('Usuario', backref=db.backref('entregas_realizadas', lazy=True))
-
-
-class Produto(db.Model):
-    """Modelo de produto"""
-    __tablename__ = 'produtos'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
-    descricao = db.Column(db.Text)
-    preco = db.Column(db.Float, nullable=False)
-    categoria = db.Column(db.String(50))
-    imagem = db.Column(db.String(200))
-    ativo = db.Column(db.Boolean, default=True)
-    
-    # Relacionamentos
-    itens_pedido = db.relationship('ItemPedido', backref='produto', lazy=True) 
+    entregador = db.relationship('Usuario', backref=db.backref('entregas_realizadas', lazy=True)) 
