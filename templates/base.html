@@ -11,36 +11,167 @@
     
     <!-- CSS Personalizado -->
     <style>
-        .navbar-brand {
+        body {
+            background: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: rgba(0, 0, 0, 0.8) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Cards com efeito glassmorphism */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-header {
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px 15px 0 0;
+            padding: 1rem;
+        }
+
+        /* Botões neon */
+        .btn-neon {
+            background: linear-gradient(45deg, #4ECDC4, #556270);
+            border: none;
+            color: white;
+            text-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .btn-neon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.4);
+            color: white;
+        }
+
+        /* Status badges */
+        .status-badge {
+            padding: 0.35em 1em;
+            border-radius: 50px;
+            font-size: 0.85em;
+            color: white;
+            margin-left: 0.5em;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Textos com gradiente */
+        .text-gradient {
+            background: linear-gradient(45deg, #4ECDC4, #556270);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             font-weight: bold;
         }
-        .card {
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+        /* Fundo com partículas */
+        .particles-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* Container principal */
+        .dashboard-container {
+            position: relative;
+            z-index: 1;
+            padding: 2rem;
+        }
+
+        /* Tabelas customizadas */
+        .custom-table {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .custom-table th {
+            background: rgba(255, 255, 255, 0.1);
+            color: #4ECDC4;
+            font-weight: 600;
+            border: none;
+        }
+
+        .custom-table td {
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        /* Inputs estilizados */
+        .neo-input, .neo-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 8px;
-            margin-bottom: 1rem;
+            color: white;
+            padding: 0.5rem 1rem;
         }
-        .card-header {
-            background-color: #f8f9fa;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
+
+        .neo-input:focus, .neo-select:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #4ECDC4;
+            box-shadow: 0 0 15px rgba(78, 205, 196, 0.3);
+            color: white;
         }
-        .btn {
-            border-radius: 4px;
+
+        .neo-select option {
+            background: #1a1a1a;
+            color: white;
         }
-        .table th {
-            border-top: none;
+
+        /* Labels flutuantes */
+        .floating-label {
+            position: relative;
+            margin-bottom: 1.5rem;
         }
-        .badge {
-            padding: 0.5em 1em;
+
+        .neo-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9em;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        /* Alertas estilizados */
+        .alert {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        /* Animações */
+        .pulse-effect {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
     </style>
     
     {% block styles %}{% endblock %}
 </head>
 <body>
+    <!-- Fundo com partículas -->
+    <div id="particles-js" class="particles-background"></div>
+
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+            <a class="navbar-brand text-gradient" href="{{ url_for('main.index') }}">
                 <i class="fas fa-utensils mr-2"></i>DeliTrack
             </a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
@@ -75,7 +206,7 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show m-3" role="alert">
+                <div class="alert alert-{{ category }} alert-dismissible fade show m-3 glass-card" role="alert">
                     {{ message }}
                     <button type="button" class="close" data-dismiss="alert">
                         <span>&times;</span>
@@ -94,11 +225,45 @@
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     
-    <!-- Scripts Personalizados -->
-    {% block scripts %}{% endblock %}
-    
+    <!-- Inicialização das partículas -->
     <script>
+        particlesJS("particles-js", {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: "#ffffff" },
+                shape: { type: "circle" },
+                opacity: { value: 0.5, random: false },
+                size: { value: 3, random: true },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: "#ffffff",
+                    opacity: 0.4,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: 2,
+                    direction: "none",
+                    random: false,
+                    straight: false,
+                    out_mode: "out",
+                    bounce: false
+                }
+            },
+            interactivity: {
+                detect_on: "canvas",
+                events: {
+                    onhover: { enable: true, mode: "repulse" },
+                    onclick: { enable: true, mode: "push" },
+                    resize: true
+                }
+            },
+            retina_detect: true
+        });
+
         // Fechar alertas automaticamente após 5 segundos
         $(document).ready(function() {
             setTimeout(function() {
@@ -106,5 +271,8 @@
             }, 5000);
         });
     </script>
+
+    <!-- Scripts Personalizados -->
+    {% block scripts %}{% endblock %}
 </body>
 </html> 
