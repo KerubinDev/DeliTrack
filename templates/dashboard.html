@@ -3,20 +3,23 @@
 {% block title %}DeliTrack - Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4 dashboard-container">
+    <!-- Fundo animado com partículas -->
+    <div id="particles-js" class="particles-background"></div>
+
     <div class="row">
-        <!-- Métricas -->
+        <!-- Métricas com cards de vidro e gradientes modernos -->
         <div class="col-md-12 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Métricas</h5>
+            <div class="card glass-card">
+                <div class="card-header glass-header">
+                    <h5 class="card-title mb-0 text-gradient">Métricas</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="periodo">Período</label>
-                                <select class="form-control" id="periodo" onchange="atualizarMetricas()">
+                            <div class="form-group floating-label">
+                                <label for="periodo" class="neo-label">Período</label>
+                                <select class="form-control neo-select" id="periodo" onchange="atualizarMetricas()">
                                     <option value="hoje">Hoje</option>
                                     <option value="semana">Última Semana</option>
                                     <option value="mes">Mês Atual</option>
@@ -25,61 +28,79 @@
                             </div>
                         </div>
                         <div class="col-md-3 periodo-personalizado d-none">
-                            <div class="form-group">
-                                <label for="dataInicio">Data Início</label>
-                                <input type="date" class="form-control" id="dataInicio">
+                            <div class="form-group floating-label">
+                                <label for="dataInicio" class="neo-label">Data Início</label>
+                                <input type="date" class="form-control neo-input" id="dataInicio">
                             </div>
                         </div>
                         <div class="col-md-3 periodo-personalizado d-none">
-                            <div class="form-group">
-                                <label for="dataFim">Data Fim</label>
-                                <input type="date" class="form-control" id="dataFim">
+                            <div class="form-group floating-label">
+                                <label for="dataFim" class="neo-label">Data Fim</label>
+                                <input type="date" class="form-control neo-input" id="dataFim">
                             </div>
                         </div>
                         <div class="col-md-3 periodo-personalizado d-none">
                             <div class="form-group">
                                 <label>&nbsp;</label>
-                                <button class="btn btn-primary btn-block" onclick="atualizarMetricas()">Atualizar</button>
+                                <button class="btn btn-neon btn-block pulse-effect" onclick="atualizarMetricas()">Atualizar</button>
                             </div>
                         </div>
                     </div>
                     <div class="row mt-4">
                         <div class="col-md-3">
-                            <div class="card bg-primary text-white">
-                                <div class="card-body">
-                                    <h6 class="card-title">Total de Pedidos</h6>
-                                    <h3 id="totalPedidos">0</h3>
+                            <div class="metric-card gradient-purple">
+                                <div class="metric-icon">
+                                    <i class="fas fa-shopping-cart"></i>
                                 </div>
+                                <div class="metric-content">
+                                    <h6>Total de Pedidos</h6>
+                                    <h3 id="totalPedidos" class="counter">0</h3>
+                                </div>
+                                <div class="metric-wave"></div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card bg-success text-white">
-                                <div class="card-body">
-                                    <h6 class="card-title">Valor Total</h6>
-                                    <h3 id="valorTotal">R$ 0,00</h3>
+                            <div class="metric-card gradient-green">
+                                <div class="metric-icon">
+                                    <i class="fas fa-dollar-sign"></i>
                                 </div>
+                                <div class="metric-content">
+                                    <h6>Valor Total</h6>
+                                    <h3 id="valorTotal" class="counter">R$ 0,00</h3>
+                                </div>
+                                <div class="metric-wave"></div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card bg-warning text-white">
-                                <div class="card-body">
-                                    <h6 class="card-title">Pedidos em Preparo</h6>
-                                    <h3 id="pedidosPreparo">0</h3>
+                            <div class="metric-card gradient-orange">
+                                <div class="metric-icon">
+                                    <i class="fas fa-clock"></i>
                                 </div>
+                                <div class="metric-content">
+                                    <h6>Pedidos em Preparo</h6>
+                                    <h3 id="pedidosPreparo" class="counter">0</h3>
+                                </div>
+                                <div class="metric-wave"></div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card bg-info text-white">
-                                <div class="card-body">
-                                    <h6 class="card-title">Pedidos Entregues</h6>
-                                    <h3 id="pedidosEntregues">0</h3>
+                            <div class="metric-card gradient-blue">
+                                <div class="metric-icon">
+                                    <i class="fas fa-check-circle"></i>
                                 </div>
+                                <div class="metric-content">
+                                    <h6>Pedidos Entregues</h6>
+                                    <h3 id="pedidosEntregues" class="counter">0</h3>
+                                </div>
+                                <div class="metric-wave"></div>
                             </div>
                         </div>
                     </div>
                     <div class="row mt-4">
                         <div class="col-md-12">
-                            <canvas id="graficoVendas"></canvas>
+                            <div class="chart-container">
+                                <canvas id="graficoVendas" class="animated-chart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -88,14 +109,16 @@
 
         <!-- Gestão de Usuários -->
         <div class="col-md-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Usuários</h5>
-                    <button class="btn btn-primary" onclick="novoUsuario()">Novo Usuário</button>
+            <div class="card glass-card">
+                <div class="card-header glass-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 text-gradient">Usuários</h5>
+                    <button class="btn btn-neon" onclick="novoUsuario()">
+                        <i class="fas fa-plus-circle"></i> Novo Usuário
+                    </button>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
+                    <div class="table-responsive custom-table">
+                        <table class="table table-hover">
                             <thead>
                                 <tr>
                                     <th>Nome</th>
@@ -107,22 +130,22 @@
                             </thead>
                             <tbody>
                                 {% for usuario in usuarios %}
-                                <tr data-id="{{ usuario.id }}">
+                                <tr data-id="{{ usuario.id }}" class="table-row-animate">
                                     <td>{{ usuario.nome }}</td>
                                     <td>{{ usuario.email }}</td>
                                     <td>{{ usuario.tipo }}</td>
                                     <td>
                                         {% if usuario.ativo %}
-                                        <span class="badge badge-success">Ativo</span>
+                                        <span class="status-badge status-active">Ativo</span>
                                         {% else %}
-                                        <span class="badge badge-danger">Inativo</span>
+                                        <span class="status-badge status-inactive">Inativo</span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <button class="btn btn-sm btn-info" onclick="editarUsuario({{ usuario.id }})">
+                                        <button class="btn btn-icon btn-edit" onclick="editarUsuario({{ usuario.id }})">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deletarUsuario({{ usuario.id }})">
+                                        <button class="btn btn-icon btn-delete" onclick="deletarUsuario({{ usuario.id }})">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </td>
@@ -137,14 +160,16 @@
 
         <!-- Gestão de Produtos -->
         <div class="col-md-12 mt-4">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Produtos do Menu</h5>
-                    <button class="btn btn-primary" onclick="novoProduto()">Novo Produto</button>
+            <div class="card glass-card">
+                <div class="card-header glass-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 text-gradient">Produtos do Menu</h5>
+                    <button class="btn btn-neon" onclick="novoProduto()">
+                        <i class="fas fa-plus-circle"></i> Novo Produto
+                    </button>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
+                    <div class="table-responsive custom-table">
+                        <table class="table table-hover">
                             <thead>
                                 <tr>
                                     <th>Nome</th>
@@ -157,23 +182,23 @@
                             </thead>
                             <tbody>
                                 {% for produto in produtos %}
-                                <tr data-id="{{ produto.id }}">
+                                <tr data-id="{{ produto.id }}" class="table-row-animate">
                                     <td>{{ produto.nome }}</td>
                                     <td>{{ produto.descricao }}</td>
                                     <td>R$ {{ "%.2f"|format(produto.preco) }}</td>
                                     <td>{{ produto.categoria }}</td>
                                     <td>
                                         {% if produto.ativo %}
-                                        <span class="badge badge-success">Ativo</span>
+                                        <span class="status-badge status-active">Ativo</span>
                                         {% else %}
-                                        <span class="badge badge-danger">Inativo</span>
+                                        <span class="status-badge status-inactive">Inativo</span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <button class="btn btn-sm btn-info" onclick="editarProduto({{ produto.id }})">
+                                        <button class="btn btn-icon btn-edit" onclick="editarProduto({{ produto.id }})">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deletarProduto({{ produto.id }})">
+                                        <button class="btn btn-icon btn-delete" onclick="deletarProduto({{ produto.id }})">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </td>
@@ -190,10 +215,10 @@
 
 <!-- Modal de Usuário -->
 <div class="modal fade" id="modalUsuario" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-glass">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalUsuarioTitulo">Novo Usuário</h5>
+                <h5 class="modal-title text-gradient" id="modalUsuarioTitulo">Novo Usuário</h5>
                 <button type="button" class="close" data-dismiss="modal">
                     <span>&times;</span>
                 </button>
@@ -201,32 +226,32 @@
             <div class="modal-body">
                 <form id="formUsuario">
                     <input type="hidden" id="usuarioId">
-                    <div class="form-group">
+                    <div class="form-group floating-label">
                         <label for="nome">Nome</label>
-                        <input type="text" class="form-control" id="nome" required>
+                        <input type="text" class="form-control neo-input" id="nome" required>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group floating-label">
                         <label for="email">Email</label>
-                        <input type="email" class="form-control" id="email" required>
+                        <input type="email" class="form-control neo-input" id="email" required>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group floating-label">
                         <label for="tipo">Tipo</label>
-                        <select class="form-control" id="tipo" required>
+                        <select class="form-control neo-select" id="tipo" required>
                             <option value="gerente">Gerente</option>
                             <option value="garcom">Garçom</option>
                             <option value="cozinheiro">Cozinheiro</option>
                             <option value="entregador">Entregador</option>
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group floating-label">
                         <label for="senha">Senha</label>
-                        <input type="password" class="form-control" id="senha" required>
+                        <input type="password" class="form-control neo-input" id="senha" required>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="salvarUsuario()">Salvar</button>
+                <button type="button" class="btn btn-outline-neon" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-neon" onclick="salvarUsuario()">Salvar</button>
             </div>
         </div>
     </div>
@@ -234,10 +259,10 @@
 
 <!-- Modal de Produto -->
 <div class="modal fade" id="modalProduto" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-glass">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalProdutoTitulo">Novo Produto</h5>
+                <h5 class="modal-title text-gradient" id="modalProdutoTitulo">Novo Produto</h5>
                 <button type="button" class="close" data-dismiss="modal">
                     <span>&times;</span>
                 </button>
@@ -245,47 +270,325 @@
             <div class="modal-body">
                 <form id="formProduto">
                     <input type="hidden" id="produtoId">
-                    <div class="form-group">
+                    <div class="form-group floating-label">
                         <label for="nomeProduto">Nome</label>
-                        <input type="text" class="form-control" id="nomeProduto" required>
+                        <input type="text" class="form-control neo-input" id="nomeProduto" required>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group floating-label">
                         <label for="descricaoProduto">Descrição</label>
-                        <textarea class="form-control" id="descricaoProduto" rows="3"></textarea>
+                        <textarea class="form-control neo-input" id="descricaoProduto" rows="3"></textarea>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group floating-label">
                         <label for="precoProduto">Preço</label>
-                        <input type="number" class="form-control" id="precoProduto" 
+                        <input type="number" class="form-control neo-input" id="precoProduto" 
                                step="0.01" min="0" required>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group floating-label">
                         <label for="categoriaProduto">Categoria</label>
-                        <input type="text" class="form-control" id="categoriaProduto">
+                        <input type="text" class="form-control neo-input" id="categoriaProduto">
                     </div>
                     <div class="form-group">
-                        <label for="imagemProduto">Imagem</label>
+                        <label for="imagemProduto" class="custom-file-upload">
+                            <i class="fas fa-cloud-upload-alt"></i> Escolher Imagem
+                        </label>
                         <input type="file" class="form-control-file" id="imagemProduto" 
                                accept="image/*">
                     </div>
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="ativoProduto" checked>
-                        <label class="form-check-label" for="ativoProduto">Produto Ativo</label>
+                    <div class="form-check custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="ativoProduto" checked>
+                        <label class="custom-control-label" for="ativoProduto">Produto Ativo</label>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="salvarProduto()">Salvar</button>
+                <button type="button" class="btn btn-outline-neon" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-neon" onclick="salvarProduto()">Salvar</button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Adicione os estilos necessários -->
+<style>
+/* Estilos gerais */
+.dashboard-container {
+    position: relative;
+    min-height: 100vh;
+    padding: 20px;
+    background: linear-gradient(135deg, #1a1f3c 0%, #2a1a4a 100%);
+}
+
+/* Partículas de fundo */
+.particles-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+/* Cards de vidro */
+.glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* Headers estilizados */
+.glass-header {
+    background: rgba(255, 255, 255, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 15px 15px 0 0;
+}
+
+/* Texto gradiente */
+.text-gradient {
+    background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: bold;
+}
+
+/* Cards de métricas */
+.metric-card {
+    position: relative;
+    padding: 20px;
+    border-radius: 15px;
+    color: white;
+    overflow: hidden;
+    min-height: 160px;
+    transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+}
+
+.gradient-purple { background: linear-gradient(135deg, #6B5B95, #FF6B6B); }
+.gradient-green { background: linear-gradient(135deg, #4ECDC4, #45B7AF); }
+.gradient-orange { background: linear-gradient(135deg, #FF9F1C, #FF4E50); }
+.gradient-blue { background: linear-gradient(135deg, #45B7AF, #6B5B95); }
+
+.metric-icon {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 2.5em;
+    opacity: 0.5;
+}
+
+.metric-content {
+    position: relative;
+    z-index: 1;
+}
+
+.metric-wave {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: linear-gradient(transparent, rgba(255, 255, 255, 0.1));
+    transform: skewY(-5deg);
+}
+
+/* Botões neon */
+.btn-neon {
+    background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+    border: none;
+    color: white;
+    padding: 10px 25px;
+    border-radius: 25px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-neon:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Tabelas personalizadas */
+.custom-table {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.table {
+    color: white;
+}
+
+.table thead th {
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.table-row-animate {
+    transition: all 0.3s ease;
+}
+
+.table-row-animate:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.01);
+}
+
+/* Status badges */
+.status-badge {
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.status-active {
+    background: linear-gradient(45deg, #4ECDC4, #45B7AF);
+    color: white;
+}
+
+.status-inactive {
+    background: linear-gradient(45deg, #FF6B6B, #FF4E50);
+    color: white;
+}
+
+/* Inputs estilizados */
+.neo-input, .neo-select {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    color: white;
+    padding: 12px 15px;
+    transition: all 0.3s ease;
+}
+
+.neo-input:focus, .neo-select:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+}
+
+/* Upload de arquivo personalizado */
+.custom-file-upload {
+    display: inline-block;
+    padding: 10px 20px;
+    background: linear-gradient(45deg, #4ECDC4, #45B7AF);
+    color: white;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.custom-file-upload:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Animações */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.pulse-effect {
+    animation: pulse 2s infinite;
+}
+
+/* Modal personalizado */
+.modal-glass {
+    backdrop-filter: blur(10px);
+}
+
+.modal-content {
+    background: rgba(30, 35, 60, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    color: white;
+}
+
+/* Gráfico animado */
+.chart-container {
+    position: relative;
+    margin-top: 20px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    transition: all 0.3s ease;
+}
+
+.chart-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.animated-chart {
+    animation: fadeIn 1s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+</style>
+
 {% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 <script>
 let graficoVendas;
+
+// Inicialização das partículas
+particlesJS("particles-js", {
+    particles: {
+        number: { value: 80, density: { enable: true, value_area: 800 } },
+        color: { value: "#ffffff" },
+        shape: { type: "circle" },
+        opacity: { value: 0.5, random: false },
+        size: { value: 3, random: true },
+        line_linked: {
+            enable: true,
+            distance: 150,
+            color: "#ffffff",
+            opacity: 0.4,
+            width: 1
+        },
+        move: {
+            enable: true,
+            speed: 2,
+            direction: "none",
+            random: false,
+            straight: false,
+            out_mode: "out",
+            bounce: false
+        }
+    },
+    interactivity: {
+        detect_on: "canvas",
+        events: {
+            onhover: { enable: true, mode: "repulse" },
+            onclick: { enable: true, mode: "push" },
+            resize: true
+        }
+    },
+    retina_detect: true
+});
 
 function novoUsuario() {
     $('#modalUsuarioTitulo').text('Novo Usuário');
@@ -374,10 +677,29 @@ function atualizarMetricas() {
         dataFim: dataFim
     })
     .done(function(data) {
-        $('#totalPedidos').text(data.total_pedidos);
+        // Animação dos números
+        $({val: 0}).animate({val: data.total_pedidos}, {
+            duration: 1000,
+            step: function() {
+                $('#totalPedidos').text(Math.floor(this.val));
+            }
+        });
+        
         $('#valorTotal').text(`R$ ${data.valor_total.toFixed(2)}`);
-        $('#pedidosPreparo').text(data.pedidos_por_status.preparando);
-        $('#pedidosEntregues').text(data.pedidos_por_status.entregue);
+        
+        $({val: 0}).animate({val: data.pedidos_por_status.preparando}, {
+            duration: 1000,
+            step: function() {
+                $('#pedidosPreparo').text(Math.floor(this.val));
+            }
+        });
+        
+        $({val: 0}).animate({val: data.pedidos_por_status.entregue}, {
+            duration: 1000,
+            step: function() {
+                $('#pedidosEntregues').text(Math.floor(this.val));
+            }
+        });
         
         atualizarGrafico(data.pedidos_por_hora);
     })
@@ -404,16 +726,45 @@ function atualizarGrafico(dados) {
                 label: 'Pedidos por Hora',
                 data: values,
                 borderColor: 'rgb(75, 192, 192)',
-                tension: 0.1
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                borderWidth: 3,
+                pointBackgroundColor: 'white',
+                pointBorderColor: 'rgb(75, 192, 192)',
+                pointHoverRadius: 8,
+                tension: 0.4,
+                fill: true
             }]
         },
         options: {
             responsive: true,
+            animation: {
+                duration: 2000,
+                easing: 'easeInOutQuart'
+            },
             scales: {
                 y: {
                     beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
                     ticks: {
-                        stepSize: 1
+                        stepSize: 1,
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'rgba(255, 255, 255, 0.7)'
                     }
                 }
             }
