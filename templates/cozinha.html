@@ -3,82 +3,219 @@
 {% block title %}DeliTrack - Cozinha{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4 dashboard-container">
+    <!-- Fundo animado com partículas -->
+    <div id="particles-js" class="particles-background"></div>
+
     <div class="row">
-        <div class="col-12">
-            <h2>Pedidos Pendentes</h2>
-            <div class="row">
-                {% for pedido in pedidos %}
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="card-title mb-0">
-                                Pedido #{{ pedido.id }}
-                                {% if pedido.tipo == 'local' %}
-                                    <span class="badge badge-info">Mesa {{ pedido.numero_mesa }}</span>
-                                {% else %}
-                                    <span class="badge badge-warning">Entrega</span>
-                                {% endif %}
-                            </h5>
-                            <small>{{ pedido.data_criacao.strftime('%H:%M:%S') }}</small>
-                        </div>
-                        <div class="card-body">
-                            <p><strong>Cliente:</strong> {{ pedido.nome_cliente }}</p>
-                            <h6>Itens:</h6>
-                            <ul class="list-group mb-3">
-                                {% for item in pedido.itens %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    {{ item.produto.nome }}
-                                    <span class="badge badge-primary badge-pill">{{ item.quantidade }}x</span>
-                                </li>
-                                {% if item.observacoes %}
-                                <li class="list-group-item bg-light">
-                                    <small>Obs: {{ item.observacoes }}</small>
-                                </li>
-                                {% endif %}
-                                {% endfor %}
-                            </ul>
-                            {% if pedido.observacoes %}
-                            <p><strong>Observações:</strong><br>{{ pedido.observacoes }}</p>
-                            {% endif %}
-                            
-                            <div class="btn-group w-100">
-                                {% if pedido.status == 'novo' %}
-                                <button class="btn btn-warning" onclick="atualizarStatus({{ pedido.id }}, 'preparando')">
-                                    Iniciar Preparo
-                                </button>
-                                {% elif pedido.status == 'preparando' %}
-                                <button class="btn btn-success" onclick="atualizarStatus({{ pedido.id }}, 'pronto')">
-                                    Marcar como Pronto
-                                </button>
-                                {% endif %}
+        <!-- Pedidos Novos -->
+        <div class="col-md-6">
+            <div class="card glass-card">
+                <div class="card-header glass-header">
+                    <h5 class="card-title mb-0 text-gradient">Pedidos Novos</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for pedido in pedidos if pedido.status == 'novo' %}
+                        <div class="col-12 mb-4">
+                            <div class="order-card glass-card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="card-title mb-0">
+                                        Pedido #{{ pedido.id }}
+                                        <span class="status-badge status-novo">Novo</span>
+                                    </h5>
+                                    <small>{{ pedido.data_criacao.strftime('%H:%M:%S') }}</small>
+                                </div>
+                                <div class="card-body">
+                                    <p>
+                                        <strong>Tipo:</strong> 
+                                        {% if pedido.tipo == 'local' %}
+                                            Mesa {{ pedido.numero_mesa }}
+                                        {% else %}
+                                            Entrega
+                                        {% endif %}
+                                    </p>
+                                    
+                                    <h6 class="text-gradient">Itens:</h6>
+                                    <ul class="list-group mb-3">
+                                        {% for item in pedido.itens %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="badge badge-primary badge-pill">{{ item.quantidade }}x</span>
+                                                {{ item.produto.nome }}
+                                                {% if item.observacoes %}
+                                                <small class="text-muted d-block">Obs: {{ item.observacoes }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    
+                                    {% if pedido.observacoes %}
+                                    <p class="mb-3">
+                                        <strong>Observações:</strong><br>
+                                        {{ pedido.observacoes }}
+                                    </p>
+                                    {% endif %}
+                                    
+                                    <button class="btn btn-neon btn-block" onclick="atualizarStatus({{ pedido.id }}, 'preparando')">
+                                        <i class="fas fa-utensils"></i> Iniciar Preparo
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div class="card-footer text-muted">
-                            Status: 
-                            {% if pedido.status == 'novo' %}
-                                <span class="badge badge-danger">Novo</span>
-                            {% elif pedido.status == 'preparando' %}
-                                <span class="badge badge-warning">Em Preparo</span>
-                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pedidos em Preparo -->
+        <div class="col-md-6">
+            <div class="card glass-card">
+                <div class="card-header glass-header">
+                    <h5 class="card-title mb-0 text-gradient">Em Preparo</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for pedido in pedidos if pedido.status == 'preparando' %}
+                        <div class="col-12 mb-4">
+                            <div class="order-card glass-card border-preparing">
+                                <div class="card-header d-flex justify-content-between align-items-center bg-preparing">
+                                    <h5 class="card-title mb-0">
+                                        Pedido #{{ pedido.id }}
+                                        <span class="status-badge status-preparando">Preparando</span>
+                                    </h5>
+                                    <small>{{ pedido.data_criacao.strftime('%H:%M:%S') }}</small>
+                                </div>
+                                <div class="card-body">
+                                    <p>
+                                        <strong>Tipo:</strong> 
+                                        {% if pedido.tipo == 'local' %}
+                                            Mesa {{ pedido.numero_mesa }}
+                                        {% else %}
+                                            Entrega
+                                        {% endif %}
+                                    </p>
+                                    
+                                    <h6 class="text-gradient">Itens:</h6>
+                                    <ul class="list-group mb-3">
+                                        {% for item in pedido.itens %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="badge badge-primary badge-pill">{{ item.quantidade }}x</span>
+                                                {{ item.produto.nome }}
+                                                {% if item.observacoes %}
+                                                <small class="text-muted d-block">Obs: {{ item.observacoes }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    
+                                    {% if pedido.observacoes %}
+                                    <p class="mb-3">
+                                        <strong>Observações:</strong><br>
+                                        {{ pedido.observacoes }}
+                                    </p>
+                                    {% endif %}
+                                    
+                                    <button class="btn btn-success btn-neon btn-block" onclick="atualizarStatus({{ pedido.id }}, 'pronto')">
+                                        <i class="fas fa-check-circle"></i> Marcar como Pronto
+                                    </button>
+                                </div>
+                            </div>
                         </div>
+                        {% endfor %}
                     </div>
                 </div>
-                {% else %}
-                <div class="col-12">
-                    <div class="alert alert-info">
-                        Não há pedidos pendentes no momento.
-                    </div>
-                </div>
-                {% endfor %}
             </div>
         </div>
     </div>
 </div>
+
+<style>
+/* Estilos específicos para a interface da cozinha */
+.order-card {
+    transition: all 0.3s ease;
+}
+
+.order-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.border-preparing {
+    border: 1px solid rgba(78, 205, 196, 0.3);
+}
+
+.bg-preparing {
+    background: rgba(78, 205, 196, 0.1);
+}
+
+/* Status badges específicos */
+.status-novo { background: linear-gradient(45deg, #FF9F1C, #FF4E50); }
+.status-preparando { background: linear-gradient(45deg, #4ECDC4, #45B7AF); }
+.status-pronto { background: linear-gradient(45deg, #6B5B95, #FF6B6B); }
+
+/* Animações */
+.order-card {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 <script>
+// Inicialização das partículas
+particlesJS("particles-js", {
+    particles: {
+        number: { value: 80, density: { enable: true, value_area: 800 } },
+        color: { value: "#ffffff" },
+        shape: { type: "circle" },
+        opacity: { value: 0.5, random: false },
+        size: { value: 3, random: true },
+        line_linked: {
+            enable: true,
+            distance: 150,
+            color: "#ffffff",
+            opacity: 0.4,
+            width: 1
+        },
+        move: {
+            enable: true,
+            speed: 2,
+            direction: "none",
+            random: false,
+            straight: false,
+            out_mode: "out",
+            bounce: false
+        }
+    },
+    interactivity: {
+        detect_on: "canvas",
+        events: {
+            onhover: { enable: true, mode: "repulse" },
+            onclick: { enable: true, mode: "push" },
+            resize: true
+        }
+    },
+    retina_detect: true
+});
+
 function atualizarStatus(pedidoId, novoStatus) {
     fetch(`/api/pedido/${pedidoId}/status`, {
         method: 'PUT',

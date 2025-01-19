@@ -1,467 +1,466 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeliTrack - Garçom</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        .pedido-card {
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .pedido-header {
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border-radius: 8px 8px 0 0;
-        }
-        .pedido-body {
-            padding: 1rem;
-        }
-        .pedido-footer {
-            padding: 1rem;
-            background-color: #f8f9fa;
-            border-radius: 0 0 8px 8px;
-        }
-        .item-menu {
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .item-menu:hover {
-            background-color: #f8f9fa;
-        }
-        .badge-aguardando {
-            background-color: #ffc107;
-            color: #000;
-        }
-        .badge-em-preparo {
-            background-color: #007bff;
-            color: #fff;
-        }
-        .badge-pronto {
-            background-color: #28a745;
-            color: #fff;
-        }
-        .badge-entregue {
-            background-color: #6c757d;
-            color: #fff;
-        }
-    </style>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand" href="#">DeliTrack - Garçom</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <span class="nav-link">Bem-vindo, {{ current_user.nome }}</span>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('auth.logout') }}">Sair</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+{% extends "base.html" %}
 
-    <div class="container-fluid mt-4">
-        <div class="row">
-            <!-- Menu -->
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Menu</h5>
-                        <div class="input-group mt-2">
-                            <input type="text" class="form-control" id="pesquisaMenu" placeholder="Pesquisar no menu...">
-                            <div class="input-group-append">
-                                <button class="btn btn-outline-secondary" type="button">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="row" id="menuItems">
-                            {% for produto in produtos %}
-                            <div class="col-md-4 mb-3">
-                                <div class="card h-100">
-                                    {% if produto.imagem %}
-                                    <img src="{{ produto.imagem }}" class="card-img-top" alt="{{ produto.nome }}">
-                                    {% endif %}
-                                    <div class="card-body">
-                                        <h6 class="card-title">{{ produto.nome }}</h6>
-                                        <p class="card-text small">{{ produto.descricao }}</p>
-                                        <p class="card-text">
-                                            <strong>R$ {{ "%.2f"|format(produto.preco) }}</strong>
-                                        </p>
-                                        <button class="btn btn-primary btn-sm btn-block" 
-                                                onclick="adicionarItem({{ produto.id }}, '{{ produto.nome }}', {{ produto.preco }})">
-                                            Adicionar
-                                        </button>
-                                    </div>
+{% block title %}DeliTrack - Garçom{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4 dashboard-container">
+    <!-- Fundo animado com partículas -->
+    <div id="particles-js" class="particles-background"></div>
+
+    <div class="row">
+        <!-- Menu de Produtos -->
+        <div class="col-md-8">
+            <div class="card glass-card mb-4">
+                <div class="card-header glass-header">
+                    <h5 class="card-title mb-0 text-gradient">Cardápio</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for produto in produtos %}
+                        <div class="col-md-4 mb-4">
+                            <div class="product-card glass-card h-100">
+                                {% if produto.imagem %}
+                                <img src="{{ produto.imagem }}" class="card-img-top product-img" alt="{{ produto.nome }}">
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title text-white">{{ produto.nome }}</h5>
+                                    <p class="card-text text-muted">{{ produto.descricao }}</p>
+                                    <p class="card-text text-gradient">R$ {{ "%.2f"|format(produto.preco) }}</p>
+                                    <button class="btn btn-neon btn-block" onclick="adicionarItem({{ produto.id }}, '{{ produto.nome }}', {{ produto.preco }})">
+                                        <i class="fas fa-plus-circle"></i> Adicionar
+                                    </button>
                                 </div>
                             </div>
-                            {% endfor %}
                         </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Pedido Atual -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Novo Pedido</h5>
-                    </div>
-                    <div class="card-body">
-                        <form id="formPedido">
-                            <div class="form-group">
-                                <label for="tipoPedido">Tipo de Pedido</label>
-                                <select class="form-control" id="tipoPedido" onchange="alternarTipoPedido()" required>
-                                    <option value="local">Consumo no Local</option>
-                                    <option value="entrega">Entrega</option>
-                                </select>
+        <!-- Pedido Atual -->
+        <div class="col-md-4">
+            <div class="card glass-card sticky-top" style="top: 20px;">
+                <div class="card-header glass-header">
+                    <h5 class="card-title mb-0 text-gradient">Pedido Atual</h5>
+                </div>
+                <div class="card-body">
+                    <form id="formPedido">
+                        <div class="form-group floating-label">
+                            <label for="tipoPedido" class="neo-label">Tipo de Pedido</label>
+                            <select class="form-control neo-select" id="tipoPedido" onchange="toggleEnderecoEntrega()">
+                                <option value="local">Consumo Local</option>
+                                <option value="entrega">Entrega</option>
+                            </select>
+                        </div>
+
+                        <div id="camposLocal">
+                            <div class="form-group floating-label">
+                                <label for="numeroMesa" class="neo-label">Número da Mesa</label>
+                                <input type="number" class="form-control neo-input" id="numeroMesa" min="1">
                             </div>
-                            <div class="form-group">
-                                <label for="nomeCliente">Nome do Cliente</label>
-                                <input type="text" class="form-control" id="nomeCliente" required>
+                        </div>
+
+                        <div id="camposEntrega" style="display: none;">
+                            <div class="form-group floating-label">
+                                <label for="nomeCliente" class="neo-label">Nome do Cliente</label>
+                                <input type="text" class="form-control neo-input" id="nomeCliente">
                             </div>
-                            <div id="camposLocal">
-                                <div class="form-group">
-                                    <label for="numeroMesa">Número da Mesa</label>
-                                    <input type="number" class="form-control" id="numeroMesa">
-                                </div>
+                            <div class="form-group floating-label">
+                                <label for="endereco" class="neo-label">Endereço</label>
+                                <input type="text" class="form-control neo-input" id="endereco">
                             </div>
-                            <div id="camposEntrega" style="display: none;">
-                                <div class="form-group">
-                                    <label for="endereco">Endereço de Entrega</label>
-                                    <input type="text" class="form-control" id="endereco" placeholder="Rua, número">
-                                </div>
-                                <div class="form-group">
-                                    <label for="complemento">Complemento</label>
-                                    <input type="text" class="form-control" id="complemento" placeholder="Apto, bloco, etc">
-                                </div>
-                                <div class="form-group">
-                                    <label for="bairro">Bairro</label>
-                                    <input type="text" class="form-control" id="bairro">
-                                </div>
-                                <div class="form-group">
-                                    <label for="telefone">Telefone</label>
-                                    <input type="tel" class="form-control" id="telefone">
-                                </div>
-                                <div class="form-group">
-                                    <label for="pontoReferencia">Ponto de Referência</label>
-                                    <input type="text" class="form-control" id="pontoReferencia">
-                                </div>
+                            <div class="form-group floating-label">
+                                <label for="complemento" class="neo-label">Complemento</label>
+                                <input type="text" class="form-control neo-input" id="complemento">
                             </div>
-                            <div class="form-group">
-                                <label>Itens do Pedido</label>
-                                <div id="itensPedido" class="list-group mb-3">
-                                    <!-- Itens serão adicionados aqui via JavaScript -->
-                                </div>
-                                <div id="totalPedido" class="text-right">
-                                    <strong>Total: R$ 0,00</strong>
-                                </div>
+                            <div class="form-group floating-label">
+                                <label for="bairro" class="neo-label">Bairro</label>
+                                <input type="text" class="form-control neo-input" id="bairro">
                             </div>
-                            <div class="form-group">
-                                <label for="observacoes">Observações</label>
-                                <textarea class="form-control" id="observacoes" rows="2"></textarea>
+                            <div class="form-group floating-label">
+                                <label for="telefone" class="neo-label">Telefone</label>
+                                <input type="tel" class="form-control neo-input" id="telefone">
                             </div>
-                            <button type="submit" class="btn btn-success btn-block">
-                                Confirmar Pedido
-                            </button>
-                        </form>
-                    </div>
+                            <div class="form-group floating-label">
+                                <label for="pontoReferencia" class="neo-label">Ponto de Referência</label>
+                                <input type="text" class="form-control neo-input" id="pontoReferencia">
+                            </div>
+                        </div>
+
+                        <div class="form-group floating-label">
+                            <label for="observacoes" class="neo-label">Observações</label>
+                            <textarea class="form-control neo-input" id="observacoes" rows="2"></textarea>
+                        </div>
+
+                        <div class="items-container mb-3">
+                            <h6 class="text-gradient">Itens do Pedido</h6>
+                            <ul class="list-group" id="listaItens">
+                                <!-- Itens serão adicionados aqui via JavaScript -->
+                            </ul>
+                        </div>
+
+                        <div class="total-container mb-3">
+                            <h5 class="text-gradient">Total: R$ <span id="totalPedido">0.00</span></h5>
+                        </div>
+
+                        <button type="button" class="btn btn-neon btn-block pulse-effect" onclick="confirmarPedido()">
+                            <i class="fas fa-check-circle"></i> Confirmar Pedido
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
 
         <!-- Pedidos Ativos -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Pedidos Ativos</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Mesa</th>
-                                        <th>Cliente</th>
-                                        <th>Itens</th>
-                                        <th>Total</th>
-                                        <th>Status</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="pedidosAtivos">
-                                    {% for pedido in pedidos_ativos %}
-                                    <tr>
-                                        <td>{{ pedido.numero_mesa }}</td>
-                                        <td>{{ pedido.nome_cliente }}</td>
-                                        <td>
-                                            <ul class="list-unstyled mb-0">
-                                                {% for item in pedido.itens %}
-                                                <li>{{ item.quantidade }}x {{ item.produto.nome }}</li>
-                                                {% endfor %}
-                                            </ul>
-                                        </td>
-                                        <td>R$ {{ "%.2f"|format(pedido.valor_total) }}</td>
-                                        <td>
-                                            <span class="badge badge-{{ pedido.status }}">
-                                                {{ pedido.status }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-sm btn-danger" 
-                                                    onclick="cancelarPedido({{ pedido.id }})">
-                                                Cancelar
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+        <div class="col-md-12 mt-4">
+            <div class="card glass-card">
+                <div class="card-header glass-header">
+                    <h5 class="card-title mb-0 text-gradient">Pedidos Ativos</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive custom-table">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nº</th>
+                                    <th>Mesa/Cliente</th>
+                                    <th>Itens</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pedido in pedidos_ativos %}
+                                <tr class="table-row-animate">
+                                    <td>#{{ pedido.id }}</td>
+                                    <td>
+                                        {% if pedido.tipo == 'local' %}
+                                            Mesa {{ pedido.numero_mesa }}
+                                        {% else %}
+                                            {{ pedido.nome_cliente }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <ul class="list-unstyled mb-0">
+                                            {% for item in pedido.itens %}
+                                            <li>{{ item.quantidade }}x {{ item.produto.nome }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </td>
+                                    <td>R$ {{ "%.2f"|format(pedido.valor_total) }}</td>
+                                    <td>
+                                        <span class="status-badge status-{{ pedido.status }}">
+                                            {{ pedido.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-icon btn-delete" onclick="cancelarPedido({{ pedido.id }})">
+                                            <i class="fas fa-times-circle"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://kit.fontawesome.com/your-code.js"></script>
-    <script>
-        let itensPedido = [];
-        let totalPedido = 0;
+<style>
+/* Estilos específicos para a interface do garçom */
+.product-card {
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
 
-        function adicionarItem(id, nome, preco) {
-            const quantidade = 1;
-            const item = {
-                id: id,
-                nome: nome,
-                preco: preco,
-                quantidade: quantidade,
-                subtotal: preco * quantidade
-            };
-            
-            const itemExistente = itensPedido.find(i => i.id === id);
-            if (itemExistente) {
-                itemExistente.quantidade += quantidade;
-                itemExistente.subtotal = itemExistente.preco * itemExistente.quantidade;
-            } else {
-                itensPedido.push(item);
-            }
-            
-            atualizarPedido();
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.product-img {
+    height: 200px;
+    object-fit: cover;
+    border-radius: 15px 15px 0 0;
+}
+
+.items-container {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 15px;
+}
+
+.total-container {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: right;
+}
+
+/* Status badges específicos */
+.status-novo { background: linear-gradient(45deg, #FF9F1C, #FF4E50); }
+.status-preparando { background: linear-gradient(45deg, #4ECDC4, #45B7AF); }
+.status-pronto { background: linear-gradient(45deg, #6B5B95, #FF6B6B); }
+
+/* Animação para itens do pedido */
+.item-pedido {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+</style>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+<script>
+// Inicialização das partículas
+particlesJS("particles-js", {
+    particles: {
+        number: { value: 80, density: { enable: true, value_area: 800 } },
+        color: { value: "#ffffff" },
+        shape: { type: "circle" },
+        opacity: { value: 0.5, random: false },
+        size: { value: 3, random: true },
+        line_linked: {
+            enable: true,
+            distance: 150,
+            color: "#ffffff",
+            opacity: 0.4,
+            width: 1
+        },
+        move: {
+            enable: true,
+            speed: 2,
+            direction: "none",
+            random: false,
+            straight: false,
+            out_mode: "out",
+            bounce: false
         }
-
-        function removerItem(id) {
-            itensPedido = itensPedido.filter(item => item.id !== id);
-            atualizarPedido();
+    },
+    interactivity: {
+        detect_on: "canvas",
+        events: {
+            onhover: { enable: true, mode: "repulse" },
+            onclick: { enable: true, mode: "push" },
+            resize: true
         }
+    },
+    retina_detect: true
+});
 
-        function atualizarQuantidade(id, delta) {
-            const item = itensPedido.find(i => i.id === id);
-            if (item) {
-                item.quantidade = Math.max(1, item.quantidade + delta);
-                item.subtotal = item.preco * item.quantidade;
-                atualizarPedido();
-            }
+let pedidoAtual = {
+    itens: [],
+    total: 0
+};
+
+function toggleEnderecoEntrega() {
+    const tipo = document.getElementById('tipoPedido').value;
+    document.getElementById('camposLocal').style.display = tipo === 'local' ? 'block' : 'none';
+    document.getElementById('camposEntrega').style.display = tipo === 'entrega' ? 'block' : 'none';
+}
+
+function adicionarItem(id, nome, preco) {
+    const item = pedidoAtual.itens.find(i => i.produto_id === id);
+    if (item) {
+        item.quantidade++;
+    } else {
+        pedidoAtual.itens.push({
+            produto_id: id,
+            nome: nome,
+            preco: preco,
+            quantidade: 1
+        });
+    }
+    atualizarListaItens();
+}
+
+function removerItem(index) {
+    pedidoAtual.itens.splice(index, 1);
+    atualizarListaItens();
+}
+
+function atualizarQuantidade(index, delta) {
+    const item = pedidoAtual.itens[index];
+    item.quantidade = Math.max(1, item.quantidade + delta);
+    atualizarListaItens();
+}
+
+function atualizarListaItens() {
+    const lista = document.getElementById('listaItens');
+    lista.innerHTML = '';
+    pedidoAtual.total = 0;
+
+    pedidoAtual.itens.forEach((item, index) => {
+        const subtotal = item.preco * item.quantidade;
+        pedidoAtual.total += subtotal;
+
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center item-pedido';
+        li.innerHTML = `
+            <div>
+                <h6 class="mb-0">${item.nome}</h6>
+                <small class="text-muted">R$ ${item.preco.toFixed(2)} x ${item.quantidade}</small>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-outline-neon" onclick="atualizarQuantidade(${index}, -1)">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-neon" onclick="atualizarQuantidade(${index}, 1)">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="removerItem(${index})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        lista.appendChild(li);
+    });
+
+    document.getElementById('totalPedido').textContent = pedidoAtual.total.toFixed(2);
+}
+
+function confirmarPedido() {
+    if (pedidoAtual.itens.length === 0) {
+        alert('Adicione pelo menos um item ao pedido');
+        return;
+    }
+
+    const tipo = document.getElementById('tipoPedido').value;
+    const dados = {
+        tipo_pedido: tipo,
+        itens: pedidoAtual.itens.map(item => ({
+            produto_id: item.produto_id,
+            quantidade: item.quantidade
+        })),
+        observacoes: document.getElementById('observacoes').value
+    };
+
+    if (tipo === 'local') {
+        const numeroMesa = document.getElementById('numeroMesa').value;
+        if (!numeroMesa) {
+            alert('Informe o número da mesa');
+            return;
         }
-
-        function atualizarPedido() {
-            const container = document.getElementById('itensPedido');
-            container.innerHTML = '';
-            
-            totalPedido = 0;
-            
-            itensPedido.forEach(item => {
-                totalPedido += item.subtotal;
-                
-                const itemElement = document.createElement('div');
-                itemElement.className = 'list-group-item';
-                itemElement.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="mb-0">${item.nome}</h6>
-                            <small>R$ ${item.preco.toFixed(2)} cada</small>
-                        </div>
-                        <div class="btn-group">
-                            <button class="btn btn-sm btn-outline-secondary" onclick="atualizarQuantidade(${item.id}, -1)">-</button>
-                            <button class="btn btn-sm btn-outline-secondary" disabled>${item.quantidade}</button>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="atualizarQuantidade(${item.id}, 1)">+</button>
-                            <button class="btn btn-sm btn-danger ml-2" onclick="removerItem(${item.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(itemElement);
-            });
-            
-            document.getElementById('totalPedido').innerHTML = `
-                <strong>Total: R$ ${totalPedido.toFixed(2)}</strong>
-            `;
-        }
-
-        function alternarTipoPedido() {
-            const tipo = document.getElementById('tipoPedido').value;
-            const camposLocal = document.getElementById('camposLocal');
-            const camposEntrega = document.getElementById('camposEntrega');
-            const numeroMesa = document.getElementById('numeroMesa');
-            const endereco = document.getElementById('endereco');
-            
-            if (tipo === 'local') {
-                camposLocal.style.display = 'block';
-                camposEntrega.style.display = 'none';
-                numeroMesa.required = true;
-                endereco.required = false;
-            } else {
-                camposLocal.style.display = 'none';
-                camposEntrega.style.display = 'block';
-                numeroMesa.required = false;
-                endereco.required = true;
-            }
-        }
-
-        document.getElementById('formPedido').onsubmit = function(e) {
-            e.preventDefault();
-            
-            if (itensPedido.length === 0) {
-                alert('Adicione pelo menos um item ao pedido');
-                return;
-            }
-            
-            const tipoPedido = document.getElementById('tipoPedido').value;
-            const pedido = {
-                tipo_pedido: tipoPedido,
-                nome_cliente: document.getElementById('nomeCliente').value,
-                observacoes: document.getElementById('observacoes').value,
-                itens: itensPedido.map(item => ({
-                    produto_id: item.id,
-                    quantidade: item.quantidade,
-                    observacoes: ''
-                }))
-            };
-
-            if (tipoPedido === 'local') {
-                const numeroMesa = document.getElementById('numeroMesa').value;
-                if (!numeroMesa) {
-                    alert('Informe o número da mesa');
-                    return;
-                }
-                pedido.numero_mesa = parseInt(numeroMesa);
-            } else {
-                const endereco = document.getElementById('endereco').value;
-                const bairro = document.getElementById('bairro').value;
-                const telefone = document.getElementById('telefone').value;
-                
-                if (!endereco || !bairro || !telefone) {
-                    alert('Preencha todos os campos de endereço obrigatórios');
-                    return;
-                }
-                
-                pedido.endereco = {
-                    logradouro: endereco,
-                    complemento: document.getElementById('complemento').value,
-                    bairro: bairro,
-                    telefone: telefone,
-                    ponto_referencia: document.getElementById('pontoReferencia').value,
-                    coordenadas: coordenadasAtuais
-                };
-            }
-            
-            fetch('/api/pedido/novo', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(pedido)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.erro || 'Erro ao criar pedido');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                alert(data.mensagem);
-                if (tipoPedido === 'entrega') {
-                    window.location.href = '/entregador';
-                } else {
-                    location.reload();
-                }
-            })
-            .catch(error => {
-                alert('Erro ao criar pedido: ' + error.message);
-            });
+        dados.numero_mesa = numeroMesa;
+    } else {
+        const endereco = {
+            logradouro: document.getElementById('endereco').value,
+            complemento: document.getElementById('complemento').value,
+            bairro: document.getElementById('bairro').value,
+            telefone: document.getElementById('telefone').value,
+            ponto_referencia: document.getElementById('pontoReferencia').value
         };
 
-        // Pesquisa no menu
-        document.getElementById('pesquisaMenu').addEventListener('input', function(e) {
-            const termo = e.target.value.toLowerCase();
-            const items = document.querySelectorAll('#menuItems .col-md-4');
-            
-            items.forEach(item => {
-                const nome = item.querySelector('.card-title').textContent.toLowerCase();
-                const descricao = item.querySelector('.card-text').textContent.toLowerCase();
-                
-                if (nome.includes(termo) || descricao.includes(termo)) {
-                    item.style.display = '';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        });
-
-        function cancelarPedido(id) {
-            if (!confirm('Tem certeza que deseja cancelar este pedido?')) return;
-            
-            fetch(`/api/pedido/${id}/status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ status: 'cancelado' })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.erro) {
-                    throw new Error(data.erro);
-                }
-                alert('Pedido cancelado com sucesso!');
-                location.reload();
-            })
-            .catch(error => {
-                alert('Erro ao cancelar pedido: ' + error.message);
-            });
+        if (!endereco.logradouro || !endereco.bairro || !endereco.telefone) {
+            alert('Preencha os campos obrigatórios de entrega');
+            return;
         }
 
-        // Adicionar geolocalização
-        let coordenadasAtuais = null;
+        dados.nome_cliente = document.getElementById('nomeCliente').value;
+        dados.endereco = endereco;
 
+        // Tentar obter localização
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    coordenadasAtuais = {
+                position => {
+                    dados.endereco.coordenadas = {
                         latitude: position.coords.latitude,
                         longitude: position.coords.longitude
                     };
+                    enviarPedido(dados);
                 },
-                function(error) {
-                    console.error('Erro ao obter localização:', error);
+                error => {
+                    console.log('Erro ao obter localização:', error);
+                    enviarPedido(dados);
                 }
             );
+        } else {
+            enviarPedido(dados);
         }
-    </script>
-</body>
-</html>
+    }
+
+    if (tipo === 'local') {
+        enviarPedido(dados);
+    }
+}
+
+function enviarPedido(dados) {
+    fetch('/api/pedido/novo', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(dados)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.erro || 'Erro ao criar pedido');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        alert(data.mensagem);
+        pedidoAtual = { itens: [], total: 0 };
+        document.getElementById('formPedido').reset();
+        atualizarListaItens();
+        location.reload();
+    })
+    .catch(error => {
+        alert('Erro ao criar pedido: ' + error.message);
+    });
+}
+
+function cancelarPedido(id) {
+    if (!confirm('Tem certeza que deseja cancelar este pedido?')) return;
+
+    fetch(`/api/pedido/${id}/status`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: 'cancelado' })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.erro || 'Erro ao cancelar pedido');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        alert(data.mensagem);
+        location.reload();
+    })
+    .catch(error => {
+        alert('Erro ao cancelar pedido: ' + error.message);
+    });
+}
+
+// Atualizar a página a cada 30 segundos
+setInterval(() => {
+    if (pedidoAtual.itens.length === 0) {
+        location.reload();
+    }
+}, 30000);
+</script>
+{% endblock %}
