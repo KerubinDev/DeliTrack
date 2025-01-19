@@ -24,6 +24,25 @@ class Usuario(UserMixin, db.Model):
         return check_password_hash(self.senha_hash, senha)
 
 
+class TokenRedefinicaoSenha(db.Model):
+    """Modelo para tokens de redefinição de senha."""
+    __tablename__ = 'tokens_redefinicao_senha'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(100), unique=True, nullable=False)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+    expiracao = db.Column(db.DateTime, nullable=False)
+    usado = db.Column(db.Boolean, default=False)
+    
+    usuario = db.relationship('Usuario', backref=db.backref('tokens_redefinicao', lazy=True))
+    
+    @property
+    def expirado(self):
+        """Verifica se o token está expirado."""
+        return datetime.utcnow() > self.expiracao
+
+
 class Cliente(db.Model):
     """Modelo para clientes."""
     __tablename__ = 'clientes'
@@ -59,6 +78,7 @@ class Pedido(db.Model):
     observacoes = db.Column(db.Text)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_atualizacao = db.Column(db.DateTime, onupdate=datetime.utcnow)
+    data_conclusao = db.Column(db.DateTime)
     itens = db.relationship('ItemPedido', backref='pedido', lazy=True)
     valor_total = db.Column(db.Float)
 
@@ -69,10 +89,13 @@ class ItemPedido(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     pedido_id = db.Column(db.Integer, db.ForeignKey('pedidos.id'), nullable=False)
-    item_menu_id = db.Column(db.Integer, db.ForeignKey('itens_menu.id'), nullable=False)
+    item_id = db.Column(db.Integer, db.ForeignKey('itens_menu.id'), nullable=False)
     quantidade = db.Column(db.Integer, nullable=False)
     observacao = db.Column(db.Text)
-    preco_unitario = db.Column(db.Float, nullable=False)
+    valor_unitario = db.Column(db.Float, nullable=False)
+    valor_total = db.Column(db.Float, nullable=False)
+    
+    item = db.relationship('ItemMenu', backref=db.backref('pedidos', lazy=True))
 
 
 class Entrega(db.Model):
@@ -86,4 +109,7 @@ class Entrega(db.Model):
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_saida = db.Column(db.DateTime)
     data_entrega = db.Column(db.DateTime)
-    observacoes = db.Column(db.Text) 
+    observacoes = db.Column(db.Text)
+    
+    pedido = db.relationship('Pedido', backref=db.backref('entrega', uselist=False))
+    entregador = db.relationship('Usuario', backref=db.backref('entregas', lazy=True)) 
