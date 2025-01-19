@@ -103,42 +103,66 @@ def dashboard():
 # APIs para atualização em tempo real
 
 @main.route('/api/pedido/novo', methods=['POST'])
+@login_required
 def criar_pedido():
     """Cria um novo pedido"""
-    dados = request.get_json()
-    
-    pedido = Pedido(
-        tipo=dados['tipo_pedido'],
-        nome_cliente=dados['nome_cliente'],
-        observacoes=dados['observacoes'],
-        criador_id=current_user.id
-    )
-    
-    if dados['tipo_pedido'] == 'local':
-        pedido.numero_mesa = dados['numero_mesa']
-    else:
-        endereco = dados['endereco']
-        pedido.endereco_entrega = endereco['logradouro']
-        pedido.complemento_entrega = endereco['complemento']
-        pedido.bairro_entrega = endereco['bairro']
-        pedido.telefone_entrega = endereco['telefone']
-        pedido.ponto_referencia = endereco['ponto_referencia']
-        if 'coordenadas' in endereco and endereco['coordenadas']:
-            pedido.latitude = endereco['coordenadas']['latitude']
-            pedido.longitude = endereco['coordenadas']['longitude']
-    
-    for item_dados in dados['itens']:
-        item = ItemPedido(
-            produto_id=item_dados['produto_id'],
-            quantidade=item_dados['quantidade'],
-            observacoes=item_dados.get('observacoes', '')
+    if current_user.tipo != 'garcom':
+        return jsonify({'erro': 'Acesso não autorizado'}), 403
+        
+    try:
+        dados = request.get_json()
+        if not dados:
+            return jsonify({'erro': 'Dados inválidos'}), 400
+            
+        pedido = Pedido(
+            tipo=dados['tipo_pedido'],
+            nome_cliente=dados['nome_cliente'],
+            observacoes=dados.get('observacoes', ''),
+            criador_id=current_user.id
         )
-        pedido.itens.append(item)
-    
-    db.session.add(pedido)
-    db.session.commit()
-    
-    return jsonify({'mensagem': 'Pedido criado com sucesso!'})
+        
+        if dados['tipo_pedido'] == 'local':
+            pedido.numero_mesa = dados['numero_mesa']
+        else:
+            endereco = dados['endereco']
+            pedido.endereco_entrega = endereco['logradouro']
+            pedido.complemento_entrega = endereco.get('complemento', '')
+            pedido.bairro_entrega = endereco['bairro']
+            pedido.telefone_entrega = endereco['telefone']
+            pedido.ponto_referencia = endereco.get('ponto_referencia', '')
+            if 'coordenadas' in endereco and endereco['coordenadas']:
+                pedido.latitude = endereco['coordenadas']['latitude']
+                pedido.longitude = endereco['coordenadas']['longitude']
+        
+        if not dados.get('itens'):
+            return jsonify({'erro': 'Pedido deve ter pelo menos um item'}), 400
+            
+        for item_dados in dados['itens']:
+            produto = Produto.query.get(item_dados['produto_id'])
+            if not produto:
+                return jsonify({'erro': f'Produto {item_dados["produto_id"]} não encontrado'}), 404
+                
+            item = ItemPedido(
+                produto_id=item_dados['produto_id'],
+                quantidade=item_dados['quantidade'],
+                valor_unitario=produto.preco,
+                observacoes=item_dados.get('observacoes', '')
+            )
+            pedido.itens.append(item)
+        
+        db.session.add(pedido)
+        db.session.commit()
+        
+        return jsonify({
+            'mensagem': 'Pedido criado com sucesso!',
+            'id': pedido.id
+        })
+        
+    except KeyError as e:
+        return jsonify({'erro': f'Campo obrigatório ausente: {str(e)}'}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 500
 
 
 @main.route('/api/pedido/<int:pedido_id>/status', methods=['PUT'])

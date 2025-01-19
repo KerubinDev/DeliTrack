@@ -341,8 +341,8 @@
             
             const tipoPedido = document.getElementById('tipoPedido').value;
             const pedido = {
-                nome_cliente: document.getElementById('nomeCliente').value,
                 tipo_pedido: tipoPedido,
+                nome_cliente: document.getElementById('nomeCliente').value,
                 observacoes: document.getElementById('observacoes').value,
                 itens: itensPedido.map(item => ({
                     produto_id: item.id,
@@ -352,13 +352,27 @@
             };
 
             if (tipoPedido === 'local') {
-                pedido.numero_mesa = document.getElementById('numeroMesa').value;
+                const numeroMesa = document.getElementById('numeroMesa').value;
+                if (!numeroMesa) {
+                    alert('Informe o número da mesa');
+                    return;
+                }
+                pedido.numero_mesa = parseInt(numeroMesa);
             } else {
+                const endereco = document.getElementById('endereco').value;
+                const bairro = document.getElementById('bairro').value;
+                const telefone = document.getElementById('telefone').value;
+                
+                if (!endereco || !bairro || !telefone) {
+                    alert('Preencha todos os campos de endereço obrigatórios');
+                    return;
+                }
+                
                 pedido.endereco = {
-                    logradouro: document.getElementById('endereco').value,
+                    logradouro: endereco,
                     complemento: document.getElementById('complemento').value,
-                    bairro: document.getElementById('bairro').value,
-                    telefone: document.getElementById('telefone').value,
+                    bairro: bairro,
+                    telefone: telefone,
                     ponto_referencia: document.getElementById('pontoReferencia').value,
                     coordenadas: coordenadasAtuais
                 };
@@ -371,13 +385,21 @@
                 },
                 body: JSON.stringify(pedido)
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.erro) {
-                    throw new Error(data.erro);
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.erro || 'Erro ao criar pedido');
+                    });
                 }
-                alert('Pedido criado com sucesso!');
-                location.reload();
+                return response.json();
+            })
+            .then(data => {
+                alert(data.mensagem);
+                if (tipoPedido === 'entrega') {
+                    window.location.href = '/entregador';
+                } else {
+                    location.reload();
+                }
             })
             .catch(error => {
                 alert('Erro ao criar pedido: ' + error.message);
